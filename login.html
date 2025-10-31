@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login – Bucket Liste</title>
+  <link rel="stylesheet" href="login.css" />
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // === Deine Supabase Keys HIER eintragen ===
+    window.__SUPABASE = {
+      url: "https://fvkrzfihlaaiedmdofcg.supabase.co",
+      anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2a3J6ZmlobGFhaWVkbWRvZmNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4OTEzOTEsImV4cCI6MjA3NzQ2NzM5MX0.e2JP_i-LE_G0DzBdULiKoTA64KEDuCzFVBTte-apER4"
+    };
+  </script>
+</head>
+<body>
+  <div class="login-container glass">
+    <div class="login-card">
+      <h1>Bucket Liste</h1>
+      <p>Melde dich an, um deine Listen überall zu nutzen</p>
+
+      <form id="loginForm">
+        <label>
+          <span>E-Mail</span>
+          <input id="email" type="email" placeholder="du@example.com" required />
+        </label>
+
+        <label>
+          <span>Passwort (optional, sonst Magic Link)</span>
+          <input id="password" type="password" placeholder="••••••••" />
+        </label>
+
+        <button type="submit" class="btn-primary">Anmelden</button>
+        <p id="msg"></p>
+      </form>
+
+      <div class="footer">
+        <a href="#" id="magicLinkBtn">Magic Link senden</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>
