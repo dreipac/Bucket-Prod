@@ -559,18 +559,24 @@
   <!-- Toasts root (oben rechts) -->
 <div id="toast-root" aria-live="polite" aria-atomic="true"></div>
 
+<!-- Supabase zuerst laden -->
 <script type="module" src="supabase.js"></script>
+
+<!-- Auf Supabase warten, Session prüfen, DANN app.js laden -->
 <script>
-  // Warten bis Supabase fertig ist
   window.addEventListener("sb-ready", async () => {
-    // Session-Guard: ohne Nutzer zurück zur Login-Seite
     const { data: { session } } = await window.sb.auth.getSession();
+
     if (!session?.user) {
+      // nicht eingeloggt -> zurück zur Login-Seite
       location.href = "login.html";
       return;
     }
 
-    // jetzt die App laden (erst JETZT existiert __SB_USER__)
+    // Session global setzen (falls app.js darauf schaut)
+    window.__SB_USER__ = session.user;
+
+    // Jetzt erst die App laden (als Modul!)
     const s = document.createElement("script");
     s.type = "module";
     s.src = "app.js";
@@ -578,7 +584,6 @@
   });
 </script>
 
-<script type="module" src="app.js"></script>
 
 </body>
 </html>
