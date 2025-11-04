@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anmelden – Bucket</title>
+  <link rel="stylesheet" href="login.css" />
+  <!-- Supabase-Client bereitstellen -->
+  <script type="module" src="supabase.js"></script>
+</head>
+<body>
+  <main class="auth-card">
+    <h1>Bucket</h1>
+
+    <form id="loginForm" class="auth-form">
+      <h2>Anmelden</h2>
+      <label>E-Mail
+        <input type="email" id="loginEmail" required />
+      </label>
+      <label>Passwort
+        <input type="password" id="loginPassword" required />
+      </label>
+      <button type="submit" class="primary">Login</button>
+      <p class="muted">Noch kein Konto? <a href="#" id="goSignup">Jetzt erstellen</a></p>
+    </form>
+
+    <form id="signupForm" class="auth-form hidden">
+      <h2>Konto erstellen</h2>
+      <label>E-Mail
+        <input type="email" id="signupEmail" required />
+      </label>
+      <label>Passwort
+        <input type="password" id="signupPassword" minlength="6" required />
+      </label>
+      <button type="submit" class="primary">Registrieren</button>
+      <p class="muted">Schon ein Konto? <a href="#" id="goLogin">Anmelden</a></p>
+    </form>
+
+    <p id="authMsg" class="msg" aria-live="polite"></p>
+  </main>
+
+  <script type="module" src="login.js"></script>
+</body>
+</html>
