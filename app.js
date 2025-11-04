@@ -2697,12 +2697,6 @@ function openListCreateModal(){
 
 }
 
-
-function closeListCreateModal(){
-  if (!listCreateModal) return;
-  closeModal(listCreateModal);
-}
-
 if (listCreateForm && !listCreateForm._wired){
   listCreateForm._wired = true;
   listCreateForm.addEventListener('submit', (e)=>{
