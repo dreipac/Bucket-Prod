@@ -1,7 +1,6 @@
 // ===== Helpers =====
 function q(sel, root=document){ return root.querySelector(sel); }
 function loadJSON(key){ try{ return JSON.parse(localStorage.getItem(key)); }catch{ return null; } }
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 function setCSS(name,val){ document.documentElement.style.setProperty(name, val); }
 const uid = () => Math.random().toString(36).slice(2, 10);
 const backupBtn    = q("#backupBtn");
