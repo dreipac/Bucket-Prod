@@ -13,35 +13,35 @@
     <h1>Login</h1>
 
     <form id="loginForm" class="auth-form">
-      <label>Username
+      <label>E-Mail
         <input type="email" id="loginEmail" placeholder="you@example.com" required />
       </label>
-      <label>Password
+      <label>Passwort
         <input type="password" id="loginPassword" placeholder="••••••••" required />
       </label>
 
       <div class="row">
         <label class="remember">
           <input type="checkbox" id="rememberMe" />
-          <span>Remember me</span>
+          <span>Anmeldedaten speichern</span>
         </label>
-        <a href="#" id="forgot" class="link">Forgot Password?</a>
+        <a href="#" id="forgot" class="link">Passwort vergessen?</a>
       </div>
 
-      <button type="submit" class="primary">Login</button>
-      <p class="muted">Don't have an account? <a href="#" id="goSignup" class="link">Register</a></p>
+      <button type="submit" class="primary">Anmelden</button>
+      <p class="muted">Neu bei uns? <a href="#" id="goSignup" class="link">Registrieren</a></p>
     </form>
 
     <form id="signupForm" class="auth-form hidden">
-      <h2>Create account</h2>
+      <h2>Konto erstellen</h2>
       <label>E-mail
         <input type="email" id="signupEmail" placeholder="you@example.com" required />
       </label>
-      <label>Password
+      <label>Passwort
         <input type="password" id="signupPassword" minlength="6" placeholder="min. 6 characters" required />
       </label>
-      <button type="submit" class="primary">Register</button>
-      <p class="muted">Already have an account? <a href="#" id="goLogin" class="link">Login</a></p>
+      <button type="submit" class="primary">Registrieren</button>
+      <p class="muted">Du hast bereits ein Konto= <a href="#" id="goLogin" class="link">Anmelden</a></p>
     </form>
 
     <p id="authMsg" class="msg" aria-live="polite"></p>
