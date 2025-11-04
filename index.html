@@ -559,21 +559,23 @@
   <!-- Toasts root (oben rechts) -->
 <div id="toast-root" aria-live="polite" aria-atomic="true"></div>
 
-<!-- Supabase bereitstellen + Auth-Guard -->
 <script type="module" src="supabase.js"></script>
-<script type="module">
-  // Auth prüfen – wenn nicht eingeloggt, zur Login-Seite
-  const { data: { session } } = await window.sb.auth.getSession();
-  if (!session || !session.user){
-    location.href = "login.html";
-  }
-  // Reaktionen auf Logout/Timeout
-  window.sb.auth.onAuthStateChange((_event, sess) => {
-    if (!sess?.user) location.href = "login.html";
+<script>
+  // Warten bis Supabase fertig ist
+  window.addEventListener("sb-ready", async () => {
+    // Session-Guard: ohne Nutzer zurück zur Login-Seite
+    const { data: { session } } = await window.sb.auth.getSession();
+    if (!session?.user) {
+      location.href = "login.html";
+      return;
+    }
+
+    // jetzt die App laden (erst JETZT existiert __SB_USER__)
+    const s = document.createElement("script");
+    s.type = "module";
+    s.src = "app.js";
+    document.body.appendChild(s);
   });
-  // Nutzer für app.js global machen
-  window.__SB_READY__ = true;
-  window.__SB_USER__  = session.user;
 </script>
 
   <script src="app.js"></script>
