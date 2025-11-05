@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bucket Liste 8.1.0</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/icons/logo.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="../icons/logo.png">
 </head>
 <body>
   <header class="topbar glass">
@@ -22,7 +22,7 @@
   </div>
 
   <button id="openSettingsTop" class="icon-btn pressable" title="Einstellungen">
-    <img id="settings-icon" src="/icons/settings.png">
+    <img id="settings-icon" src="../icons/settings.png">
   </button>
 </div>
 
@@ -103,38 +103,38 @@
 
 
         <button id="openSettings" class="drawer-link pressable">
-          <img id="settings-icon" src="/icons/settings.png" title="Einstellungen öffnen">
+          <img id="settings-icon" src="../icons/settings.png" title="Einstellungen öffnen">
           <span class="btn-drawer-text">Einstellungen</span>
         </button>
 
         <button id="openProfile" class="drawer-link pressable" title="Profil bearbeiten">
-          <img id="settings-icon" src="/icons/profil.png">
+          <img id="settings-icon" src="../icons/profil.png">
           <span class="btn-drawer-text">Profil</span>
         </button>
 
         <!-- Link zum Notizbuch -->
         <button id="openNotebookBtn" class="drawer-link pressable" title="Notizbuch öffnen">
-          <img id="settings-icon" src="/icons/notebook.png">
+          <img id="settings-icon" src="../icons/notebook.png">
           <span class="btn-drawer-text">Notizbuch</span>
         </button>
 
 
         <!-- Backup -->
         <button id="backupBtn" class="drawer-link pressable" title="Daten sichern">
-          <img id="settings-icon" src="/icons/backup.png">
+          <img id="settings-icon" src="../icons/backup.png">
           <span class="btn-drawer-text">Backup sichern</span>
         </button>
 
         <!-- Restore -->
         <label for="restoreInput" class="drawer-link pressable" title="Daten laden">
-          <img id="settings-icon" src="/icons/load.png">
+          <img id="settings-icon" src="../icons/load.png">
           <span class="btn-drawer-text">Backup laden</span>
           <input type="file" id="restoreInput" accept="application/json" hidden>
         </label>
 
         <!-- Abmelden-Button im Drawer -->
         <button id="logoutAnywhere" class="drawer-link pressable logout-btn" title="Abmelden">
-          <img id="settings-icon" src="/icons/logout.png" alt="">
+          <img id="settings-icon" src="../icons/logout.png" alt="">
           <span class="btn-drawer-text">Abmelden</span>
         </button>
 
@@ -296,7 +296,7 @@
   <div id="settingsMenu" class="settings-menu">
     <button type="button" id="openDesign" class="menu-card pressable">
       <div class="menu-card-title">
-        <img src="/icons/design.png" alt="" class="menu-card-ico" />
+        <img src="../icons/design.png" alt="" class="menu-card-ico" />
         Design
       </div>
       <div class="menu-card-sub">Farbschema, Modus, Hintergrund</div>
@@ -304,7 +304,7 @@
 
     <button type="button" id="openMisc" class="menu-card pressable">
       <div class="menu-card-title">
-        <img src="/icons/sonstiges.png" alt="" class="menu-card-ico" />
+        <img src="../icons/sonstiges.png" alt="" class="menu-card-ico" />
         Sonstiges
       </div>
       <div class="menu-card-sub">Layout, Titel &amp; mehr</div>
@@ -312,7 +312,7 @@
 
     <button type="button" id="openAccount" class="menu-card pressable">
       <div class="menu-card-title">
-        <img src="/icons/profil.png" alt="" class="menu-card-ico" />
+        <img src="../icons/profil.png" alt="" class="menu-card-ico" />
         Konto
       </div>
       <div class="menu-card-sub">Profilbild, Name, Organisation</div>
@@ -320,7 +320,7 @@
 
     <button type="button" id="openVersion" class="menu-card pressable">
       <div class="menu-card-title">
-        <img src="/icons/info.png" alt="" class="menu-card-ico" />
+        <img src="../icons/info.png" alt="" class="menu-card-ico" />
         Version
       </div>
       <div class="menu-card-sub">Versionierung</div>
@@ -365,7 +365,7 @@
   <!-- NEU: Version-Ansicht -->
 <section id="settingsVersion" class="settings-section" hidden style="display:none;">
   <div class="version-view glass">
-    <img src="/icons/logo.png" alt="App Logo" class="version-logo" />
+    <img src="../icons/logo.png" alt="App Logo" class="version-logo" />
     <h2 class="version-title">
       <span id="aboutAppTitle">Bucket Liste</span>
     </h2>
@@ -488,19 +488,19 @@
   <div id="listIconGrid" class="icon-grid">
     <!-- 5 kleine Kacheln – existierende Dateien im Ordner /icons -->
     <button type="button" class="icon-tile" data-icon="icons/aufgaben.png" aria-pressed="false">
-      <img src="/icons/aufgaben.png" alt="Bucket">
+      <img src="../icons/aufgaben.png" alt="Bucket">
     </button>
     <button type="button" class="icon-tile" data-icon="icons/compliance.png" aria-pressed="false">
-      <img src="/icons/compliance.png" alt="Zahnrad">
+      <img src="../icons/compliance.png" alt="Zahnrad">
     </button>
     <button type="button" class="icon-tile" data-icon="icons/pending.png" aria-pressed="false">
-      <img src="/icons/pending.png" alt="Notizbuch">
+      <img src="../icons/pending.png" alt="Notizbuch">
     </button>
     <button type="button" class="icon-tile" data-icon="icons/dauer.png" aria-pressed="false">
-      <img src="/icons/dauer.png" alt="Backup">
+      <img src="../icons/dauer.png" alt="Backup">
     </button>
     <button type="button" class="icon-tile" data-icon="icons/note.png" aria-pressed="false">
-      <img src="/icons/note.png" alt="Laden">
+      <img src="../icons/note.png" alt="Laden">
     </button>
   </div>
   <p class="hint">Optional – wenn du nichts auswählst, wird die Liste ohne Icon erstellt.</p>
@@ -519,7 +519,7 @@
   <div class="modal-dialog glass" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <form id="profileForm" autocomplete="off">
       <div class="modal-title-with-icon">
-        <img src="/icons/profil.png" alt="" class="modal-title-icon" />
+        <img src="../icons/profil.png" alt="" class="modal-title-icon" />
         <h2 id="profileTitle">Profil anlegen</h2>
       </div>
 
