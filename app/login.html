@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anmelden – Bucket</title>
+  <link rel="stylesheet" href="login.css" />
+  <!-- Supabase-Client bereitstellen -->
+  <script type="module" src="supabase.js"></script>
+</head>
+<body>
+  <main class="auth-card" role="main">
+    <h1>Login</h1>
+
+    <form id="loginForm" class="auth-form">
+      <label>E-Mail
+        <input type="email" id="loginEmail" placeholder="you@example.com" required />
+      </label>
+      <label>Passwort
+        <input type="password" id="loginPassword" placeholder="••••••••" required />
+      </label>
+
+      <div class="row">
+        <label class="remember">
+          <input type="checkbox" id="rememberMe" />
+          <span>Anmeldedaten speichern</span>
+        </label>
+        <a href="#" id="forgot" class="link">Passwort vergessen?</a>
+      </div>
+
+      <button type="submit" class="primary">Anmelden</button>
+      <p class="muted">Neu bei uns? <a href="#" id="goSignup" class="link">Registrieren</a></p>
+    </form>
+
+    <form id="signupForm" class="auth-form hidden">
+      <h2>Konto erstellen</h2>
+      <label>E-mail
+        <input type="email" id="signupEmail" placeholder="you@example.com" required />
+      </label>
+      <label>Passwort
+        <input type="password" id="signupPassword" minlength="6" placeholder="min. 6 characters" required />
+      </label>
+      <button type="submit" class="primary">Registrieren</button>
+      <p class="muted">Du hast bereits ein Konto= <a href="#" id="goLogin" class="link">Anmelden</a></p>
+    </form>
+
+    <p id="authMsg" class="msg" aria-live="polite"></p>
+  </main>
+
+  <script type="module" src="login.js"></script>
+</body>
+</html>
