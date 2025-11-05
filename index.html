@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Übersicht</title>
+  <link rel="stylesheet" href="./overview.css" />
+  <script type="module" src="./overview.js"></script>
+</head>
+<body class="layout">
+  <!-- Linke Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <!-- Kleines Logo oder Initialen – optional -->
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span class="brand-name">Straton</span>
+    </div>
+
+    <nav class="sidebar__nav">
+      <!-- Hier könntest du später weitere Links ergänzen -->
+      <button id="logoutBtn" class="btn-logout" type="button">Abmelden</button>
+    </nav>
+  </aside>
+
+  <!-- Hauptbereich -->
+  <main class="main">
+    <div class="hero">
+      <img class="hero__logo" src="./icons/Straton-white.png" alt="Straton Logo" />
+    </div>
+
+    <section class="app-grid single">
+      <article class="app-card small">
+        <img src="./icons/logo.png" alt="Bucket Logo" width="48" height="48" />
+        <h2>Bucket Liste</h2>
+        <p>To-Do App</p>
+        <a class="btn" href="./app/index.html">Starten</a>
+      </article>
+    </section>
+    <p class="dev-credit">Developed by Armin Durmisi</p>
+  </main>
+</body>
+</html>
