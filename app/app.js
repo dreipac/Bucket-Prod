@@ -412,72 +412,55 @@ document.addEventListener("click", (e) => {
 
 function applyPrefs(){
   const t = THEME_MAP[prefs.theme] || THEME_MAP.blue;
-  ("--accent", t.accent);
-  ("--accent-2", t.accent2);
-  // Galaxy: fixen Akzent unabhängig von THEME_MAP
-if (prefs.mode === "galaxy"){
-  ("--accent", "#0EA5FF");
-  ("--accent-2", "#60A5FA");
-}
+  setCSS("--accent", t.accent);
+  setCSS("--accent-2", t.accent2);
 
-// Press-Animation-Dauer aus Speed-Faktor berechnen (1.0 = 220ms)
-const base = 220; // ms
-const speed = clamp(prefs.ui?.pressSpeed ?? 1, 0.5, 2);
-const dur = Math.round(base / speed);
-("--press-dur", dur + "ms");
+  // Galaxy: fixe Akzente
+  if (prefs.mode === "galaxy"){
+    setCSS("--accent", "#0EA5FF");
+    setCSS("--accent-2", "#60A5FA");
+  }
 
-// Settings-Slider initialisieren
-if (pressSpeedRange) pressSpeedRange.value = String(speed);
-if (pressSpeedRange) applyRangeFill(pressSpeedRange);
-if (pressSpeedValue) pressSpeedValue.textContent = speed.toFixed(2) + "×";
+  // Press-Speed
+  const base = 220;
+  const speed = clamp(prefs.ui?.pressSpeed ?? 1, 0.5, 2);
+  const dur = Math.round(base / speed);
+  setCSS("--press-dur", dur + "ms");
 
-
+  // Glas/Karten/Sidebar
   const strong = prefs.glassAlphaStrong;
   const content = clamp(strong - 0.17, 0.20, 0.95);
-  ("--glass-strong-alpha", strong);
-  ("--glass-alpha", content);
-  ("--card-alpha", prefs.cardAlpha);
-  ("--sidebar-w", (prefs.ui?.sideW || 280) + "px");
-  ("--card-scale", prefs.ui?.cardScale || 1);
-  ("--bg-url", `url("../background/${prefs.bg}.png")`);
-
+  setCSS("--glass-strong-alpha", strong);
+  setCSS("--glass-alpha", content);
+  setCSS("--card-alpha", prefs.cardAlpha);
+  setCSS("--sidebar-w", (prefs.ui?.sideW || 280) + "px");
+  setCSS("--card-scale", prefs.ui?.cardScale || 1);
+  setCSS("--bg-url", `url("../background/${prefs.bg}.png")`);
 
 
   document.documentElement.setAttribute("data-theme", prefs.mode);
 
-  // Galaxy-Animation je nach Modus starten/stoppen
-if (prefs.mode === "galaxy") {
-  startGalaxy();
-} else {
-  stopGalaxy();
-}
+  // Galaxy on/off
+  if (prefs.mode === "galaxy") startGalaxy(); else stopGalaxy();
 
-// Button-Press-Speed
-if (pressSpeedRange && !pressSpeedRange._wired){
-  pressSpeedRange.addEventListener("input", () => {
-    const v = parseFloat(pressSpeedRange.value);
-    prefs.ui.pressSpeed = clamp(isNaN(v) ? 1 : v, 0.5, 2);
-    if (pressSpeedValue) pressSpeedValue.textContent = prefs.ui.pressSpeed.toFixed(2) + "×";
-    savePrefs();
-    applyPrefs(); // setzt --press-dur live
-  });
-  pressSpeedRange._wired = true;
-}
-
-
-
-  if (q("#opacityRange")) q("#opacityRange").value = String(strong.toFixed(2));
-  if (q("#opacityValue")) q("#opacityValue").textContent = strong.toFixed(2);
-  if (q("#cardOpacityRange")) q("#cardOpacityRange").value = String(prefs.cardAlpha.toFixed(2));
-  if (q("#cardOpacityValue")) q("#cardOpacityValue").textContent = prefs.cardAlpha.toFixed(2);
+  // UI-Controls spiegeln
+  if (pressSpeedRange) pressSpeedRange.value = String(speed), applyRangeFill(pressSpeedRange);
+  if (pressSpeedValue)  pressSpeedValue.textContent = speed.toFixed(2) + "×";
+  const or = q("#opacityRange"), ov = q("#opacityValue");
+  const cr = q("#cardOpacityRange"), cv = q("#cardOpacityValue");
+  if (or) or.value = String(strong.toFixed(2));
+  if (ov) ov.textContent = strong.toFixed(2);
+  if (cr) cr.value = String(prefs.cardAlpha.toFixed(2));
+  if (cv) cv.textContent = prefs.cardAlpha.toFixed(2);
   if (q("#bgSelect")) q("#bgSelect").value = prefs.bg;
+
   markActiveTheme(prefs.theme);
   markActiveMode(prefs.mode);
   markListCreateMode();
   markNotebookOpenMode();
   setAppTitleUI();
-
 }
+
 
 // ===== Elements =====
 const profileBadge      = q("#profileBadge");
