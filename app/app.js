@@ -412,19 +412,19 @@ document.addEventListener("click", (e) => {
 
 function applyPrefs(){
   const t = THEME_MAP[prefs.theme] || THEME_MAP.blue;
-  setCSS("--accent", t.accent);
-  setCSS("--accent-2", t.accent2);
+  ("--accent", t.accent);
+  ("--accent-2", t.accent2);
   // Galaxy: fixen Akzent unabhängig von THEME_MAP
 if (prefs.mode === "galaxy"){
-  setCSS("--accent", "#0EA5FF");
-  setCSS("--accent-2", "#60A5FA");
+  ("--accent", "#0EA5FF");
+  ("--accent-2", "#60A5FA");
 }
 
 // Press-Animation-Dauer aus Speed-Faktor berechnen (1.0 = 220ms)
 const base = 220; // ms
 const speed = clamp(prefs.ui?.pressSpeed ?? 1, 0.5, 2);
 const dur = Math.round(base / speed);
-setCSS("--press-dur", dur + "ms");
+("--press-dur", dur + "ms");
 
 // Settings-Slider initialisieren
 if (pressSpeedRange) pressSpeedRange.value = String(speed);
@@ -434,12 +434,12 @@ if (pressSpeedValue) pressSpeedValue.textContent = speed.toFixed(2) + "×";
 
   const strong = prefs.glassAlphaStrong;
   const content = clamp(strong - 0.17, 0.20, 0.95);
-  setCSS("--glass-strong-alpha", strong);
-  setCSS("--glass-alpha", content);
-  setCSS("--card-alpha", prefs.cardAlpha);
-  setCSS("--sidebar-w", (prefs.ui?.sideW || 280) + "px");
-  setCSS("--card-scale", prefs.ui?.cardScale || 1);
-  setCSS("--bg-url", `url("background/${prefs.bg}.png")`);
+  ("--glass-strong-alpha", strong);
+  ("--glass-alpha", content);
+  ("--card-alpha", prefs.cardAlpha);
+  ("--sidebar-w", (prefs.ui?.sideW || 280) + "px");
+  ("--card-scale", prefs.ui?.cardScale || 1);
+  ("--bg-url", `url("../background/${prefs.bg}.png")`);
 
 
 
@@ -1000,7 +1000,7 @@ const getSelectedList = () => getListById(state.selectedListId);
     const clientX = (e.touches && e.touches[0]?.clientX) || e.clientX;
     const dx = clientX - startX;
     const w = clamp(startW + dx, MIN, MAX);
-    setCSS("--sidebar-w", w + "px");
+    ("--sidebar-w", w + "px");
     prefs.ui.sideW = w;
     if (sideWidthRange){ sideWidthRange.value = String(w); if (sideWidthValue) sideWidthValue.textContent = w + "px"; }
     if (sideWidthRange) applyRangeFill(sideWidthRange);   
