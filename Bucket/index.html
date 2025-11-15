@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bucket Liste 8.1.0</title>
+  <link rel="stylesheet" href="style.css" />
+<link rel="icon" type="image/png" sizes="512x512" href="assets/icons/logo.png">
+</head>
+<body>
+  <header class="topbar glass">
+    <button class="icon-btn pressable" id="menuBtn" aria-label="Menü">
+      <span class="burger"></span>
+    </button>
+    <h1>Bucket Liste</h1>
+    <!-- Rechts: Settings in der Topbar -->
+<div class="topbar-actions">
+  <!-- ADD: Profil-Anzeige in der Topbar -->
+  <div id="profileBadge" class="profile-badge" hidden>
+    <img id="profileAvatar" alt="Profilbild">
+    <span id="profileText"></span>
+  </div>
+
+  <button id="openSettingsTop" class="icon-btn pressable" title="Einstellungen">
+    <img id="settings-icon" src="../assets/icons/settings.png">
+  </button>
+</div>
+
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar glass" id="sidebar">
+    <div class="list-add">
+      <button id="addListBtn" class="pill pill-primary pressable" title="Neue Liste erstellen">+ Neue Liste</button>
+    </div>
+
+
+
+      <nav id="lists" class="lists"></nav>
+    </aside>
+<div id="sidebarResizer" class="v-splitter" aria-hidden="true"></div>
+
+    <main class="content glass">
+      <div class="content-top">
+        <button id="addItemBtn" class="btn btn-primary pressable">
+          <span class="plus">+</span> Neuer Eintrag
+        </button>
+         <button id="clearArchiveBtn" class="btn btn-danger pressable" hidden>Archiv leeren</button>
+
+        <!-- Suche & Filter -->
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Suchen (Titel/Notizen) …" />
+        <select id="sortBy" title="Sortierung">
+          <option value="none">Sortierung: Aus</option>
+          <option value="due">Fälligkeit</option>
+          <option value="status">Status</option>
+          <option value="prio">Priorität</option>
+          <option value="title">A–Z (Titel)</option>
+        </select>
+
+          <select id="statusFilter" title="Status">
+            <option value="all">Status: Alle</option>
+            <option value="open">Nur offen</option>
+            <option value="done">Nur erledigt</option>
+          </select>
+          <select id="dueFilter" title="Fälligkeit">
+            <option value="all">Fälligkeit: Alle</option>
+            <option value="today">Heute</option>
+            <option value="overdue">Überfällig</option>
+          </select>
+          <select id="prioFilter" title="Priorität">
+            <option value="all">Priorität: Alle</option>
+            <option value="low">Niedrig</option>
+            <option value="med">Mittel</option>
+            <option value="high">Dringend</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fortschritt (bezieht sich auf sichtbare/ gefilterte Einträge) -->
+      <div class="progress-wrap">
+        <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+        <div id="progressText" class="progress-text">0 von 0 erledigt (0%)</div>
+      </div>
+
+      <ul id="items" class="items"></ul>
+      <p id="emptyText" class="empty">Aktuell sind keine Einträge vorhanden</p>
+    </main>
+  </div>
+
+  <!-- Drawer (Hamburger → von links) -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-backdrop"></div>
+    <aside class="drawer-panel">
+      <h3>Menü</h3>
+      <nav class="drawer-nav">
+
+          <!-- Zur Übersicht (Startseite) -->
+        <button id="toOverviewBtn" class="drawer-link pressable" title="Zur Übersicht">
+          <img id="settings-icon" src="../assets/icons/home.png" alt="">
+          <span class="btn-drawer-text">Armin Straton</span>
+        </button>
+
+        <!--Settings-->
+        <button id="openSettings" class="drawer-link pressable">
+          <img id="settings-icon" src="../assets/icons/settings.png" title="Einstellungen öffnen">
+          <span class="btn-drawer-text">Einstellungen</span>
+        </button>
+        <!--Konto-->
+        <button id="openProfile" class="drawer-link pressable" title="Kontoeinstellungen öffnen">
+          <img id="settings-icon" src="../assets/icons/profil.png">
+          <span class="btn-drawer-text">Konto</span>
+        </button>
+
+        <!-- Abmelden-Button im Drawer -->
+        <button id="logoutAnywhere" class="drawer-link pressable logout-btn" title="Abmelden">
+          <img id="settings-icon" src="../assets/icons/logout.png" alt="">
+          <span class="btn-drawer-text">Abmelden</span>
+        </button>
+
+        <script>
+          document.getElementById("logoutAnywhere")?.addEventListener("click", async ()=>{
+            try { await window.sb.auth.signOut(); } catch(_) {}
+            location.href = "../login/login.html";
+          });
+        </script>
+
+      </nav>
+    </aside>
+  </div>
+
+  <!-- Templates -->
+<template id="listButtonTpl">
+  <div class="list-row" draggable="false">
+    <button class="list-btn pressable" draggable="false">
+      <!-- NEU: Icon links vom Titel -->
+      <img class="list-ico" alt="" aria-hidden="true" hidden>
+      <span class="list-name"></span>
+    </button>
+    <div class="list-actions">
+      <button class="icon xsmall pressable" data-action="rename" title="Umbenennen">✎</button>
+      <button class="icon xsmall pressable" data-action="delete" title="Löschen">🗑</button>
+    </div>
+    <button class="drag-handle list" title="Ziehen zum Sortieren" aria-label="Ziehen zum Sortieren">⠿</button>
+  </div>
+</template>
+
+
+  <template id="itemTpl">
+    <li class="item card" draggable="false">
+      <label class="checkbox">
+        <input type="checkbox" />
+        <span class="checkmark"></span>
+      </label>
+
+      <div class="item-body">
+        <div class="row1">
+          <span class="title text"></span>
+          <span class="prio chip" hidden></span>
+          <span class="due chip" hidden></span>
+        </div>
+        <p class="notes" hidden></p>
+        <ul class="subtasks-preview" hidden></ul>
+      </div>
+
+      <div class="item-actions">
+        <span class="repeat chip" hidden></span>
+        <button class="icon small pressable" data-action="edit" title="Bearbeiten">✎</button>
+        <button class="icon small pressable" data-action="delete" title="Löschen">🗑</button>
+      </div>
+
+      <button class="drag-handle" title="Zum Sortieren ziehen" aria-label="Ziehen zum Sortieren">⠿</button>
+    </li>
+  </template>
+
+  <!-- Modal: Eintrag -->
+  <div id="itemModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog glass" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <form id="itemForm" autocomplete="off">
+        <h2 id="modalTitle">Neuer Eintrag</h2>
+
+        <label class="field">
+          <span class="label">Titel</span>
+          <input id="fTitle" type="text" placeholder="Titel…" required />
+        </label>
+
+        <section class="settings-section">
+          <label class="label">Priorität</label>
+          <div id="prioSegment" class="segmented prio-seg">
+            <button type="button" class="seg-btn" data-prio="low">Niedrig</button>
+            <button type="button" class="seg-btn" data-prio="med">Mittel</button>
+            <button type="button" class="seg-btn" data-prio="high">Dringend</button>
+          </div>
+        </section>
+
+        <div class="row">
+          <span class="label">Fällig bis</span>
+          <div class="row-inputs">
+            <input id="fDate" type="date" class="chip" />
+            <input id="fTime" type="time" class="chip" />
+          </div>
+        </div>
+        <section class="settings-section">
+  <label class="label">Wiederholen</label>
+  <div class="row repeat-row">
+    <select id="fRepeat" class="chip">
+      <option value="none">Nicht wiederholen</option>
+      <option value="daily">Täglich</option>
+      <option value="weekly">Wöchentlich</option>
+      <option value="monthly">Monatlich</option>
+    </select>
+
+    <select id="fRepeatEnd" class="chip">
+      <option value="never">Ohne Ende</option>
+      <option value="after">Nach Anzahl</option>
+      <option value="until">Bis Datum</option>
+    </select>
+
+    <input id="fRepeatCount" type="number" class="chip" min="1" step="1" placeholder="Anzahl" style="display:none;">
+    <input id="fRepeatUntil" type="date" class="chip" style="display:none;">
+  </div>
+</section>
+
+
+        <label class="field">
+          <span class="label">Notizen</span>
+          <textarea id="fNotes" rows="6" placeholder="Notizen…"></textarea>
+        </label>
+
+        <section class="settings-section">
+          <label class="label">Unteraufgaben</label>
+
+          <!-- Container für dynamische Unteraufgaben-Reihen -->
+          <div id="subtasksContainer" class="subtasks-list" aria-live="polite"></div>
+
+          <!-- Toolbar: neue Unteraufgabe hinzufügen -->
+          <div class="subtasks-toolbar">
+            <button type="button" id="addSubtaskBtn" class="subtask-add-link">
+              <span aria-hidden="true">＋</span> Unteraufgabe hinzufügen
+            </button>
+          </div>
+        </section>
+
+
+        <div class="modal-actions">
+          <button type="button" id="cancelBtn" class="btn btn-muted pressable">Abbrechen</button>
+          <button type="button" id="saveItemBtn" class="btn btn-primary pressable">Übernehmen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- Modal: Einstellungen (NEU – fullscreen mit linker Leiste + Close-X) -->
+<div id="settingsModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+
+  <div class="modal-dialog settings settings-full" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <!-- Schließen oben rechts -->
+    <button type="button" id="settingsCloseX" class="settings-close-x" aria-label="Schließen">×</button>
+
+    <div class="settings-shell">
+      <!-- Linke Navigationsleiste -->
+      <nav class="settings-nav" id="settingsNav" aria-label="Einstellungen Kategorien">
+        <h2 class="settings-title">Einstellungen</h2>
+
+        <button type="button" class="settings-tab active" data-view="design" id="navDesign">
+          <img src="../assets/icons/design.png" alt="" class="settings-ico"> Design
+        </button>
+
+        <button type="button" class="settings-tab" data-view="misc" id="navMisc">
+          <img src="../assets/icons/sonstiges.png" alt="" class="settings-ico"> Sonstiges
+        </button>
+
+        <button type="button" class="settings-tab" data-view="account" id="navAccount">
+          <img src="../assets/icons/profil.png" alt="" class="settings-ico"> Konto
+        </button>
+
+        <button type="button" class="settings-tab" data-view="version" id="navVersion">
+          <img src="../assets/icons/info.png" alt="" class="settings-ico"> Version
+        </button>
+      </nav>
+
+
+      <!-- Rechte Inhaltsfläche -->
+      <section class="settings-content">
+        <!-- DESIGN -->
+        <div id="settingsDesign">
+          <h3>Farbschema</h3>
+          <div id="themeGrid" class="theme-grid"></div>
+          <div class="settings-section field">
+            <label class="label">Sidebar-Breite</label>
+            <div class="range-row">
+              <input id="sideWidthRange" type="range" min="220" max="520" step="2">
+              <div id="sideWidthValue" class="range-value">280px</div>
+            </div>
+          </div>
+
+          <div class="settings-section field">
+            <label class="label">Kartenskalierung</label>
+            <div class="range-row">
+              <input id="cardScaleRange" type="range" min="0.85" max="1.35" step="0.01">
+              <div id="cardScaleValue" class="range-value">1.00</div>
+            </div>
+          </div>
+
+          <h3>Darstellung</h3>
+          <div id="modeSegment" class="segmented">
+            <button type="button" class="seg-btn" data-mode="light">Hell</button>
+            <button type="button" class="seg-btn" data-mode="dark">Dunkel</button>
+            <button type="button" class="seg-btn" data-mode="galaxy">Galaxy</button>
+          </div>
+
+          <h3>Hintergrund</h3>
+          <select id="bgSelect" class="select-modern">
+            <option value="zurich">Zürich</option>
+            <option value="geneva">Genf</option>
+            <option value="zug">Zug</option>
+            <option value="prizren">Prizren</option>
+            <option value="chur">Chur</option>
+            <option value="luzern">Luzern</option>
+            <option value="lugano">Lugano</option>
+          </select>
+        </div>
+
+        <!-- SONSTIGES -->
+        <div id="settingsMisc" hidden>
+
+          <div class="settings-section field">
+            <label class="label">Button-Press-Speed</label>
+            <div class="range-row">
+              <input id="pressSpeedRange" type="range" min="0.5" max="2.0" step="0.01">
+              <div id="pressSpeedValue" class="range-value">1.00×</div>
+            </div>
+          </div>
+
+          <div class="settings-section field">
+            <div class="ff">
+              <input id="appTitleInput" type="text" placeholder=" " required />
+              <label for="appTitleInput">App-Titel</label>
+            </div>
+          </div>
+        </div>
+
+<!-- KONTO -->
+<div id="settingsAccount" hidden>
+  <form id="accountForm" autocomplete="on">
+    <div class="row" style="align-items:center; gap:16px;">
+      <img id="accountAvatarPreview" class="avatar-preview" alt="Vorschau" />
+      <label class="field" style="flex:1;">
+        <span class="label">Profilbild</span>
+        <input id="accountAvatarInput" type="file" accept="image/*" />
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="label">E-Mail</span>
+      <div class="ff">
+        <input id="accountEmail" type="email" placeholder=" " readonly />
+        <label for="accountEmail">E-Mail</label>
+      </div>
+    </label>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+      <label class="field">
+        <span class="label">Vorname</span>
+        <div class="ff">
+          <input id="accountFirst" type="text" placeholder=" " required />
+          <label for="accountFirst">Vorname</label>
+        </div>
+      </label>
+
+      <label class="field">
+        <span class="label">Nachname</span>
+        <div class="ff">
+          <input id="accountLast" type="text" placeholder=" " required />
+          <label for="accountLast">Nachname</label>
+        </div>
+      </label>
+    </div>
+
+    <!-- Feste Konto-ID (read-only) + Copy -->
+    <div class="row" style="gap:12px; align-items:flex-end;">
+      <label class="field" style="flex:1;">
+        <span class="label">Konto-ID</span>
+        <div class="ff">
+          <input id="accountId" type="text" placeholder=" " readonly />
+          <label for="accountId">Konto-ID</label>
+        </div>
+      </label>
+      <button type="button" id="accountIdCopy" class="btn btn-muted pressable" style="height:44px;">Kopieren</button>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" id="accountReset" class="btn btn-muted pressable">Abbrechen</button>
+      <button type="submit" id="accountSave" class="btn btn-primary pressable">Speichern</button>
+    </div>
+  </form>
+</div>
+
+
+
+        <!-- VERSION -->
+        <div id="settingsVersion" hidden class="version-plain">
+          <img src="../assets/icons/logo.png" alt="App Logo" class="version-logo" />
+          <h2 class="version-title"><span id="aboutAppTitle">Bucket Liste</span></h2>
+          <p class="version-string">Version 8.1.1</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Modal: Archiv leeren -->
+<div id="clearArchiveModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-dialog glass" role="dialog" aria-modal="true" aria-labelledby="clearArchiveTitle">
+    <div class="modal-content">
+      <h2 id="clearArchiveTitle">Archiv leeren?</h2>
+      <p>Alle archivierten Einträge werden dauerhaft entfernt. Bist du sicher?</p>
+      <div class="modal-actions">
+        <button type="button" id="clearArchiveCancel" class="btn btn-muted pressable">Abbrechen</button>
+        <button type="button" id="clearArchiveConfirm" class="btn btn-danger pressable">Archiv leeren</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEU: Modal - Neue Liste erstellen -->
+<div id="listCreateModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-dialog glass" role="dialog" aria-modal="true" aria-labelledby="listCreateTitle">
+    <form id="listCreateForm" autocomplete="off">
+      <h2 id="listCreateTitle">Neue Liste</h2>
+
+      <div class="ff">
+        <input id="listCreateName" type="text" placeholder=" " required />
+        <label for="listCreateName">Listenname</label>
+      </div>
+
+<section class="settings-section">
+  <label class="label">Icon auswählen</label>
+  <div id="listIconGrid" class="icon-grid">
+    <!-- 5 kleine Kacheln – existierende Dateien im Ordner /icons -->
+    <button type="button" class="icon-tile" data-icon="icons/aufgaben.png" aria-pressed="false">
+      <img src="../assets/icons/aufgaben.png" alt="Bucket">
+    </button>
+    <button type="button" class="icon-tile" data-icon="icons/compliance.png" aria-pressed="false">
+      <img src="../assets/icons/compliance.png" alt="Zahnrad">
+    </button>
+    <button type="button" class="icon-tile" data-icon="icons/pending.png" aria-pressed="false">
+      <img src="../assets/icons/pending.png" alt="Notizbuch">
+    </button>
+    <button type="button" class="icon-tile" data-icon="icons/dauer.png" aria-pressed="false">
+      <img src="../assets/icons/dauer.png" alt="Backup">
+    </button>
+    <button type="button" class="icon-tile" data-icon="icons/note.png" aria-pressed="false">
+      <img src="../assets/icons/note.png" alt="Laden">
+    </button>
+  </div>
+  <p class="hint">Optional – wenn du nichts auswählst, wird die Liste ohne Icon erstellt.</p>
+</section>
+      <div class="modal-actions">
+        <button type="button" id="listCreateCancel" class="btn btn-muted pressable">Abbrechen</button>
+        <button type="submit" id="listCreateCreateBtn" class="btn btn-primary pressable">Erstellen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Galaxy starfield canvas (nur im Modus 'galaxy' sichtbar) -->
+<canvas id="galaxyCanvas" aria-hidden="true"></canvas>
+
+  <!-- Toasts root (oben rechts) -->
+<div id="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Supabase zuerst laden -->
+<script type="module" src="../shared/supabase.js"></script>
+
+<!-- Auf Supabase warten, Session prüfen, DANN app.js laden -->
+<script>
+window.addEventListener("sb-ready", async () => {
+  const { data: { session } } = await window.sb.auth.getSession();
+
+  if (!session?.user) {
+    // Nicht eingeloggt → zur Login-Seite (mit Rücksprung-Parameter)
+    const returnTo = encodeURIComponent("/Bucket/index.html");
+    location.href = `../login/login.html?returnTo=${returnTo}`;
+    return;
+  }
+
+  // Session global setzen (optional)
+  window.__SB_USER__ = session.user;
+
+  // Jetzt erst die App laden (als Modul)
+  const s = document.createElement("script");
+  s.type = "module";
+  s.src = "app.js";
+  document.body.appendChild(s);
+});
+</script>
+
+
+</body>
+</html>
