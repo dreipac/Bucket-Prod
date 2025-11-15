@@ -18,15 +18,41 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   color: var(--text);
-  background:
-    radial-gradient(1200px 800px at 80% -10%, #16213a 0%, transparent 60%),
-    linear-gradient(180deg, #05070b 0%, var(--bg-0) 60%, #06080e 100%);
+
+  /* 🔹 Hintergrundbild statt Verlauf */
+  background: url("./assets/background/overviewBackground.png") center center / cover no-repeat fixed;
+  background-color: #05070b; /* Fallback, falls Bild nicht lädt */
 }
+/* globaler Dark-Blur über dem Bild */
+.main::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 12, 0.35);
+  -webkit-backdrop-filter: blur(30px) saturate(140%);
+  backdrop-filter: blur(30px) saturate(140%);
+  z-index: -1;
+}
+
+/* Dunkler Blur-Schleier über der gesamten Seite (außer Sidebar) */
+.layout::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 12, 0.55); /* stärker abgedunkelt */
+  -webkit-backdrop-filter: blur(30px) saturate(140%);
+  backdrop-filter: blur(30px) saturate(140%);
+  z-index: -1;
+}
+
+
+
+
 
 /* ----- Layout (Sidebar links) ----- */
 .layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 280px 1fr;
   min-height: 100vh;
 }
 
@@ -116,35 +142,41 @@ body {
   opacity: .95;
 }
 
-/* App-Kachel (klein) */
-.app-grid{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 260px));
-  gap: 1.25rem;
-  align-content: start;
-  padding: 1rem 0 3rem;
+/* App-Kachel-Grid: zentriert in der Mitte */
+.app-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+  text-align: center;
 }
+
 .app-grid.single{
   grid-template-columns: min(260px, 90vw);
 }
 
-.app-card{
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--ring);
+.app-card {
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
-  padding: 1rem 1.2rem;
+  padding: 1.2rem 1.4rem;
   text-align: center;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 30px -10px var(--shadow);
-  transition: transform .18s ease, background .2s ease, border-color .2s ease;
+  backdrop-filter: blur(10px) saturate(120%);
+  transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  color: var(--text);
+  width: 250px;
 }
 .app-card.small{
   padding: .9rem 1rem;
 }
-.app-card:hover{
+/* Hover-Effekt: gleich wie Sidebar */
+.app-card:hover {
   transform: translateY(-3px);
-  background: rgba(255,255,255,0.05);
-  border-color: #375a91;
+  border-color: rgba(122,162,255,.45);
+  background: linear-gradient(180deg, rgba(122,162,255,.16), rgba(122,162,255,.06));
+  box-shadow: 0 10px 24px rgba(122,162,255,.18);
 }
 
 .app-card img{
@@ -165,6 +197,18 @@ body {
   font-size: .85rem;
   color: var(--muted);
 }
+
+.app-card .btn {
+  background: linear-gradient(180deg, var(--acc-1), var(--acc-2));
+  box-shadow: 0 6px 18px rgba(34,176,255,.4);
+  transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+}
+.app-card .btn:hover {
+  opacity: .92;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px rgba(122,162,255,.5);
+}
+
 
 /* Buttons */
 .btn{
@@ -192,4 +236,607 @@ body {
   opacity: 0.7;
   margin-top: 3rem;
   padding-bottom: 1rem;
+}
+
+/* ===== Modale (Overview) im Bucket-Design ===== */
+
+.modal{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+
+  /* wie in Bucket: sichtbar nur im open-State */
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.modal.open{
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* halbtransparenter, leicht verschwommener Hintergrund */
+.modal__backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 20, 0.60);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity .22s cubic-bezier(.22,1,.36,1);
+}
+
+.modal.open .modal__backdrop{
+  opacity: 1;
+}
+
+/* Karte: Glasoptik wie in Bucket (.modal-dialog) */
+.modal__card{
+  position: relative;
+  width: min(760px, 92vw);
+  max-height: 80vh;
+  padding: 18px 20px;
+
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background:
+    linear-gradient(
+      rgba(15, 23, 42, 0.92),
+      rgba(15, 23, 42, 0.90)
+    );
+  box-shadow: 0 24px 60px rgba(0,0,0,0.65);
+
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+
+  /* sanfte Einblend-Animation wie Bucket */
+  transform: translateY(8px) scale(.985);
+  opacity: 0;
+  transition:
+    transform .22s cubic-bezier(.22,1,.36,1),
+    opacity   .22s cubic-bezier(.22,1,.36,1),
+    filter    .22s;
+}
+
+.modal.open .modal__card{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.modal.closing .modal__card{
+  opacity: 0;
+  transform: translateY(-4px) scale(.985);
+  filter: blur(.5px);
+}
+
+/* Header wie Bucket-Modal (oben dünne Linie) */
+.modal__header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding-bottom: .75rem;
+  margin-bottom: .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.modal__header h2{
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: .2px;
+}
+
+/* Close-Button rechts oben – an Bucket angelehnt */
+.modal__close{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(15,23,42,0.9);
+  color: #fff;
+  border-radius: 999px;
+  padding: .20rem .6rem;
+  cursor: pointer;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .08s ease,
+    box-shadow .15s ease;
+}
+
+.modal__close:hover{
+  background: rgba(37, 56, 92, 0.95);
+  border-color: rgba(124,77,255,.6);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  transform: translateY(-1px);
+}
+
+.modal__close:active{
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(0,0,0,.4);
+}
+
+/* Liste im Modal: Karten-Look wie Bucket-Items */
+.modal__list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.modal__list li{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+
+  padding: .65rem .8rem;
+  border-radius: 14px;
+
+  background: radial-gradient(
+      circle at top left,
+      rgba(124,77,255,0.12),
+      transparent 56%
+    ),
+    rgba(15,23,42,0.95);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 10px 26px rgba(0,0,0,.55);
+
+  font-size: .9rem;
+}
+
+.modal__list li .meta{
+  color: var(--muted);
+  font-size: .78rem;
+  margin-top: .15rem;
+}
+
+/* Buttons innerhalb der Zeile (Annehmen/Ablehnen/Entfernen) */
+.modal__list .row-actions{
+  display: flex;
+  gap: .4rem;
+}
+
+.modal__list .row-actions button{
+  appearance: none;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(15,23,42,0.95);
+  color: #e6ecff;
+  padding: .3rem .75rem;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .08s ease,
+    box-shadow .15s ease;
+}
+
+.modal__list .row-actions button:hover{
+  background: rgba(124,77,255,0.18);
+  border-color: rgba(124,77,255,0.7);
+  box-shadow: 0 6px 18px rgba(124,77,255,0.5);
+  transform: translateY(-1px);
+}
+
+.modal__list .row-actions button:active{
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(0,0,0,.6);
+}
+
+/* Empty-State */
+.modal__list .empty{
+  justify-content: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Footer: Button-Leiste unten wie .modal-actions in Bucket */
+.modal__footer{
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  padding-top: .8rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+/* Footer-Button im Bucket-Stil (Schließen) */
+.modal__footer .btn-logout{
+  width: auto;
+  padding: .55rem 1.1rem;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+
+  background: linear-gradient(180deg, var(--acc-1), var(--acc-2));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(34,176,255,.45);
+  transition:
+    transform .08s ease,
+    box-shadow .15s ease,
+    opacity .15s ease;
+}
+
+.modal__footer .btn-logout:hover{
+  opacity: .95;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(34,176,255,.6);
+}
+
+.modal__footer .btn-logout:active{
+  transform: translateY(0);
+  box-shadow: 0 5px 14px rgba(0,0,0,.7);
+}
+
+
+/* ====== Glass Sidebar (wie Screenshot) ====== */
+/* Container: keine eigene Farbe, keine Rundung */
+.sidebar.glass-nav{
+  padding: 0;
+  background: transparent;
+  border-right: 0;
+}
+
+/* KANTIG + echter Glas-Blur ohne Farbverlauf */
+.nav-card{
+  position: sticky;
+  top: 0;
+  height: 100vh;
+
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .9rem;
+  padding: .9rem;
+
+  border-radius: 0;
+  /* leicht dunkler Glas-Blur */
+  background: rgba(8, 10, 18, 0.25);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: none; /* kein Schatten */
+}
+
+
+
+/* Suche */
+.nav-search{
+  display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: .5rem;
+  padding: .5rem .6rem;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+}
+.nav-search .ico{ width: 18px; height: 18px; opacity: .9 }
+.nav-search input{
+  appearance: none; border: 0; outline: 0; background: transparent; color: var(--text);
+  font-size: .95rem;
+}
+.nav-search input::placeholder{ color: var(--muted) }
+
+/* Gruppen */
+.nav-groups{ display: flex; flex-direction: column; gap: .9rem; overflow: auto; }
+.nav-group{ display: flex; flex-direction: column; gap: .35rem; }
+.nav-label{
+  font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); opacity: .8; padding: .1rem .2rem .2rem .2rem;
+}
+
+/* Navigationseinträge: clean, erst bei Hover sichtbar */
+.nav-item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: .55rem;
+
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: .95rem;
+
+  padding: .45rem .55rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+
+  transition: background .18s ease, border-color .18s ease, transform .15s ease;
+  cursor: pointer;
+}
+
+/* Hover-Effekt: sanfter Glas-Glow */
+.nav-item:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+/* Aktiver Menüpunkt */
+.nav-item[aria-current="page"] {
+  background: rgba(122,162,255,0.18);
+  border-color: rgba(122,162,255,0.35);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+  font-weight: 600;
+}
+
+
+.nav-icon{ width: 22px; height: 22px; display: grid; place-items: center; opacity: .95 }
+.nav-icon svg{ width: 23px; height: 24px }
+.nav-text{ font-weight: 600; letter-spacing: .2px; font-size: .92rem }
+
+.nav-action {
+  all: unset;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: .55rem;
+  padding: .45rem .55rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .15s ease;
+}
+.nav-action:hover {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+
+/* ======= Sidebar Footer (Profilbereich – angepasst ans Gesamtbild) ======= */
+.nav-footer.dark-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+
+  /* gleicht das Padding der .nav-card aus */
+  margin-left: -1.2rem;
+  margin-right: -1.2rem;
+  margin-bottom: -1.2rem;
+  padding: 1rem 1.4rem;
+
+  width: calc(100% + 2.4rem); /* kompensiert den negativen Margin */
+  background: rgba(12, 16, 28, 0.45);
+  border-top: 1px solid rgba(255,255,255,.05);
+  border-radius: 0;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.05);
+  opacity: .95;
+}
+
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.profile-name {
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--text);
+}
+
+.profile-id {
+  font-size: .78rem;
+  color: var(--muted);
+  opacity: .9;
+}
+
+.logout-ico {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.18);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease;
+}
+.logout-ico:hover {
+  border-color: rgba(122,162,255,.55);
+  background: rgba(255,255,255,.08);
+}
+
+.nav-icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+.nav-item:hover .nav-icon img,
+.nav-action:hover .nav-icon img {
+  opacity: 1;
+}
+
+/* ---------- Intro Text unter dem Logo ---------- */
+.intro {
+  text-align: center;
+  max-width: 640px;
+  margin: 1rem auto 3rem;
+  color: var(--text);
+  opacity: 0.95;
+}
+
+.intro__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.3px;
+  color: #f2f5ff;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+
+.intro__text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.profile-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.profile-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.copy-id-icon {
+  width: 16px;
+  height: 16px;
+  color: #ffffff;       /* SVG wird weiß */
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.copy-id-icon:hover {
+  opacity: 1;
+}
+
+/* ===== Toast für Kopier-Bestätigung ===== */
+.toast {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-16px);
+  z-index: 2000;
+
+  min-width: 280px;
+  max-width: 380px;
+  padding: 0.75rem 1rem 0.9rem;
+
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(9,13,24,0.96));
+  box-shadow: 0 18px 40px rgba(0,0,0,0.65);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  overflow: hidden;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 0, rgba(124,77,255,0.6), transparent 55%);
+  color: #ffffff;
+}
+
+.toast__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.toast__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.toast__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.toast__message {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.toast__close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: rgba(230,236,255,0.8);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0 0 0.4rem;
+}
+
+.toast__close:hover {
+  color: #ffffff;
+}
+
+/* Progress-Bar am unteren Rand */
+.toast__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--acc-1), var(--acc-2));
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+/* Wenn sichtbar, läuft die Progress-Animation */
+.toast.is-visible .toast__progress {
+  animation: toast-progress 3s linear forwards;
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.overview-svg-icon {
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+  fill: #ffffff;
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+}
+
+.nav-item:hover .overview-svg-icon,
+.nav-item-active .overview-svg-icon {
+  opacity: 1;
 }
