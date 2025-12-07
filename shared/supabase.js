@@ -69,4 +69,3 @@ sb.auth.onAuthStateChange((event, session) => {
 if (session?.user && onLoginPage()) {
   location.href = resolvePostLoginTarget();
 }
-
