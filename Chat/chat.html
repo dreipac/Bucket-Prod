@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nachrichtenchats</title>
+  <link rel="stylesheet" href="../global/ui.css">
   <link rel="stylesheet" href="./chat.css" />
+  <link rel="stylesheet" href="../announcement/announcement.css" />
 <script type="module" src="../shared/supabase.js"></script>
 
 </head>
@@ -17,8 +19,15 @@
         <img src="../assets/icons/home.png" alt="Home" class="rail-btn__icon-img">
         <span class="rail-btn__label">Straton</span>
       </a>
+
+      <!-- Einstellungen-Button -->
+      <button type="button" class="rail-btn pressable" id="settingsBtn">
+        <img src="../assets/icons/settings.png" alt="Einstellungen" class="rail-btn__icon-img">
+        <span class="rail-btn__label">Einstellungen</span>
+      </button>
     </div>
   </nav>
+
 
   <aside class="chat-sidebar">
 
@@ -67,7 +76,6 @@
       </div>
     </div>
   </div>
-
   </aside>
 
   <main class="chat-main">
@@ -97,6 +105,71 @@
       <button type="submit">Senden</button>
     </form>
   </main>
+
+      <!-- NEU: Einstellungen-Modal -->
+<div id="settingsModal" class="chat-modal" aria-hidden="true">
+  <div class="chat-modal-backdrop"></div>
+
+  <div class="chat-modal-dialog settings-full" role="dialog" aria-modal="true" aria-labelledby="chatSettingsTitle">
+    <!-- Schließen oben rechts (gleiches ID wie vorher, nur anderes Styling) -->
+    <button
+      type="button"
+      id="settingsClose"
+      class="settings-close-x"
+      aria-label="Schließen"
+    >
+      ×
+    </button>
+
+    <div class="settings-shell">
+      <!-- Linke Navigationsleiste wie bei Bucket -->
+      <nav class="settings-nav" aria-label="Chat-Einstellungen Kategorien">
+        <h2 class="settings-title">Einstellungen</h2>
+
+        <!-- Nur ein Tab: Design (du kannst später Sonstiges/Konto/Version ergänzen) -->
+        <button type="button" class="settings-tab active" id="navChatDesign">
+          <img src="../assets/icons/design.png" alt="" class="settings-ico">
+          Design
+        </button>
+      </nav>
+
+      <!-- Rechte Inhaltsfläche -->
+      <section class="settings-content">
+        <div id="settingsChatDesign">
+          <h3 id="chatSettingsTitle">Design</h3>
+          <p class="settings-description">
+            Wähle das Erscheinungsbild der Chat-Oberfläche.
+          </p>
+
+          <section class="settings-section">
+            <div
+              class="settings-theme-toggle"
+              role="radiogroup"
+              aria-label="Design"
+            >
+              <button
+                type="button"
+                class="settings-theme-option"
+                data-theme="dark"
+                aria-pressed="false"
+              >
+                Dark
+              </button>
+              <button
+                type="button"
+                class="settings-theme-option"
+                data-theme="light"
+                aria-pressed="false"
+              >
+                Light
+              </button>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
 
   <script type="module">
   // Warten bis Supabase bereit ist
