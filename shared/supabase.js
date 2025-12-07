@@ -1,4 +1,4 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm";
 
 const SUPABASE_URL = "https://fvkrzfihlaaiedmdofcg.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2a3J6ZmlobGFhaWVkbWRvZmNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4OTEzOTEsImV4cCI6MjA3NzQ2NzM5MX0.e2JP_i-LE_G0DzBdULiKoTA64KEDuCzFVBTte-apER4";
@@ -69,3 +69,4 @@ sb.auth.onAuthStateChange((event, session) => {
 if (session?.user && onLoginPage()) {
   location.href = resolvePostLoginTarget();
 }
+
