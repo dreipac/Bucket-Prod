@@ -1,0 +1,482 @@
+/* === Globale CSS Datei (Wiederverwendete styles)
+Alle Inhalte sind einheitlich in allen Apps drin === */
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+:root {
+
+  --glass-rgb: 22 24 28;
+  --glass-alpha: .58;
+  --glass-strong-alpha: .75;
+  --card-alpha: .82;
+
+  --accent: #22b0ff;
+  --accent-2: #7c4dff;
+
+  --ink: #e9eef6;
+  --ink-strong: #fff;
+  --ink-inverse: #0b1220;
+  --muted: #b9c0c9;
+
+  --success: #2ecc71;
+  --danger: #ff6b6b;
+
+  --radius: 18px;
+  --shadow: 0 12px 36px rgba(0,0,0,.4);
+
+  --bg: #101317;
+  --overlay-dark: .55;
+  --overlay-light: .18;
+
+  /* Fallback – wird ggf. von JS überschrieben (Bucket-App) */
+  --press-dur: 220ms;
+}
+
+/* Dark/Light */
+html[data-theme="dark"]{
+  --glass-rgb: 22 24 28;
+  --ink: #e9eef6; --ink-strong:#fff; --ink-inverse:#0b1220; --bg:#101317;
+}
+html[data-theme="light"]{
+  --glass-rgb: 255 255 255;
+  --ink: #0b1220; --ink-strong:#0b1220; --ink-inverse:#e9eef6; --bg:#f6f8fb;
+}
+
+body{
+  margin: 0; color: var(--ink);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(60% 80% at 10% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 60%),
+    radial-gradient(80% 60% at 100% 100%, color-mix(in srgb, var(--accent-2) 30%, transparent), transparent 60%),
+    linear-gradient(rgba(10,12,15, var(--overlay-dark)), rgba(10,12,15, var(--overlay-dark))),
+    var(--bg-url, url("background/zurich.png")) center/cover no-repeat fixed;
+
+  filter: saturate(1.05);
+}
+html[data-theme="light"] body::before{
+  background:
+    radial-gradient(60% 80% at 10% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
+    radial-gradient(80% 60% at 100% 100%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 60%),
+    linear-gradient(rgba(255,255,255, var(--overlay-light)), rgba(255,255,255, var(--overlay-light))),
+    var(--bg-url, url("background/zurich.png")) center/cover no-repeat fixed;
+
+}
+
+/* ===== Globale Button-Press-Animation ===== */
+
+/* Alle klickbaren Elemente, die "poppen" sollen */
+.pressable{
+  will-change: transform, filter;
+  transition:
+    transform var(--press-dur) cubic-bezier(.22,1,.36,1),
+    filter    var(--press-dur) ease,
+    box-shadow var(--press-dur) ease;
+}
+
+/* Bounce nach dem Loslassen */
+.pressable.pop{
+  animation: press-pop var(--press-dur) ease-out;
+}
+
+@keyframes press-pop{
+  0%   { transform: scale(.965); }
+  60%  { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+
+
+/* ===== Globale Buttons (Bucket-Stil) ===== */
+
+.btn{
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1;
+  background: rgb(var(--glass-rgb, 22 24 28) / 0.65);
+  color: var(--ink, #e9eef6);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    transform .05s ease,
+    box-shadow .15s ease,
+    filter .15s ease,
+    background .15s ease;
+}
+
+.btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.45);
+}
+
+.btn:active{
+  transform: translateY(1px) scale(.985);
+  box-shadow: 0 3px 10px rgba(0,0,0,.3);
+}
+
+.btn:disabled{
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible{
+  outline: 2px solid var(--accent, #22b0ff);
+  outline-offset: 2px;
+}
+
+/* Primärer Button (blauer Verlauf wie in Bucket) */
+.btn-primary{
+  color: var(--ink-inverse, #0b1220);
+  background: linear-gradient(180deg, var(--accent-2, #7c4dff), var(--accent, #22b0ff));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent, #22b0ff) 35%, transparent);
+}
+
+.btn-primary:hover{
+  filter: brightness(1.03);
+}
+
+/* Neutrale Variante (grau) */
+.btn-muted{
+  background: #5b636d;
+  color: #fff;
+}
+
+.btn-muted:hover{
+  filter: brightness(1.05);
+}
+
+html[data-theme="light"] .btn-muted{
+  background: #ccd3df;
+  color: #0b1220;
+}
+
+/* Button-Reihe am unteren Rand (z.B. in Modals) */
+.modal-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+
+/* ===== Glas & Card ===== */
+.glass{
+  background: rgb(var(--glass-rgb, 22 24 28) / var(--glass-strong-alpha, .75));
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow, 0 12px 36px rgba(0,0,0,.4));
+  border-radius: var(--radius, 18px);
+}
+
+/* Gradient-Card (Bucket-Stil) */
+.card{
+  position: relative;
+  border-radius: 28px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(
+      rgb(var(--glass-rgb, 22 24 28) / var(--card-alpha, .82)),
+      rgb(var(--glass-rgb, 22 24 28) / var(--card-alpha, .82))
+    ) padding-box,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent, #22b0ff) 55%, transparent),
+      color-mix(in srgb, var(--accent-2, #7c4dff) 55%, transparent)
+    ) border-box;
+}
+
+/* ===== Globale Modal-Grundstruktur (Bucket-Stil) ===== */
+
+.modal{
+  position: fixed;
+  inset: 0;
+  visibility: hidden;   /* erlaubt Ausblend-Animation */
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Offen: klickbar */
+.modal.open{
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Schließen-Phase: sichtbar, aber nicht klickbar (für Out-Animation) */
+.modal.closing{
+  visibility: visible;
+  pointer-events: none;
+}
+
+/* Explizit versteckt: niemals blockieren */
+.modal[aria-hidden="true"]{
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Abdunkelung im Hintergrund */
+.modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity .22s cubic-bezier(.22,1,.36,1);
+}
+
+/* Backdrop Fade in/out */
+.modal.open .modal-backdrop{ opacity: 1; }
+.modal.closing .modal-backdrop{ opacity: 0; }
+
+/* Dialog zentrieren */
+.modal-dialog{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: min(760px, 94vw);
+  padding: 22px;
+}
+
+/* Fokus-Stil für Buttons / pressables im Modal */
+.modal .btn:focus-visible,
+.modal .pressable:focus-visible{
+  outline: 2px solid var(--accent, #22b0ff);
+  outline-offset: 2px;
+}
+
+/* Optional: Ripple innerhalb von Modals (wenn dein JS das Element einfügt) */
+.modal .ripple{
+  position: absolute;
+  border-radius: 999px;
+  transform: scale(0);
+  animation: rippleAnim .6s ease-out forwards;
+  background: currentColor;
+  opacity: .22;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+@keyframes rippleAnim{
+  to{
+    transform: scale(16);
+    opacity: 0;
+  }
+}
+
+.modal .btn,
+.modal .pressable{
+  position: relative;
+  overflow: hidden;              /* für den Ripple */
+  transition: transform .08s ease, filter .18s ease, box-shadow .18s ease, background-color .18s ease;
+  will-change: transform, box-shadow;
+}
+
+.modal .btn:hover,
+.modal .pressable:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+  filter: brightness(1.03);
+}
+
+
+.modal .btn:active,
+.modal .pressable:active{
+  transform: translateY(1px) scale(.98);
+  filter: brightness(.98);
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+}
+
+/* Tastaturfokus sichtbar */
+.modal .btn:focus-visible,
+.modal .pressable:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Ripple-Element (per JS hinzugefügt) */
+.modal .ripple{
+  position: absolute;
+  border-radius: 999px;
+  transform: scale(0);
+  animation: rippleAnim .6s ease-out forwards;
+  background: currentColor;
+  opacity: .22;                  /* dezenter */
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+@keyframes rippleAnim{
+  to{ transform: scale(16); opacity: 0; }
+}
+
+.modal .modal-dialog{
+  will-change: transform, opacity;
+  /* ACHTUNG: Nur setzen, wenn du diese Eigenschaften nicht schon global definierst.
+     Falls du bereits in style.css (weiter oben) .modal-dialog mit position/left/top/transform definiert hast,
+     kannst du die nächsten vier Zeilen weglassen. */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%); /* Basis-Zentrierung bleibt IMMER erhalten */
+}
+
+/* Beim Öffnen: subtil von leicht oberhalb in die Mitte fahren, ohne die Basis zu verlieren */
+.modal.open .modal-dialog{
+  animation: modalInCentered .22s cubic-bezier(.22,1,.36,1);
+}
+
+/* Beim Schließen: kurz zurück, weich ausfaden */
+.modal.closing .modal-dialog{
+  animation: modalOutCentered .16s ease-in forwards;
+}
+
+@keyframes modalInCentered{
+  from{
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 6px)) scale(.985); /* relativ zur Mitte */
+    filter: blur(1px);
+  }
+  to{
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes modalOutCentered{
+  from{
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: none;
+  }
+  to{
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 4px)) scale(.985);
+    filter: blur(.5px);
+  }
+}
+
+.modal-dialog.settings{
+  width: min(760px, 92vw);
+  max-height: 86vh;
+  padding: 18px;
+}
+
+/* === Modal Buttons: Hover/Press + Ripple === */
+html[data-theme="light"] .modal .btn:hover,
+html[data-theme="light"] .modal .pressable:hover{
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+
+
+/* ===== Toast Meldung ===== */
+.toast {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-16px);
+  z-index: 2000;
+
+  min-width: 280px;
+  max-width: 380px;
+  padding: 0.75rem 1rem 0.9rem;
+
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(9,13,24,0.96));
+  box-shadow: 0 18px 40px rgba(0,0,0,0.65);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  overflow: hidden;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 0, rgba(124,77,255,0.6), transparent 55%);
+  color: #ffffff;
+}
+
+.toast__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.toast__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.toast__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.toast__message {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.toast__close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: rgba(230,236,255,0.8);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0 0 0.4rem;
+}
+
+.toast__close:hover {
+  color: #ffffff;
+}
+
+/* Progress-Bar am unteren Rand */
+.toast__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--acc-1), var(--acc-2));
+  transform-origin: left;
+  transform: scaleX(0);
+}
+
+/* Wenn sichtbar, läuft die Progress-Animation */
+.toast.is-visible .toast__progress {
+  animation: toast-progress 3s linear forwards;
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
