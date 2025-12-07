@@ -1,0 +1,165 @@
+/* Gemeinsame Styles für Broadcast-Meldungen (User + Admin) */
+
+.ann-overlay {
+  position: fixed;
+  inset: 0;
+  padding: 1.5rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  /* gleiches Overlay-Gefühl wie der Rest der App */
+  background: rgba(0, 0, 0, var(--overlay-dark));
+  backdrop-filter: blur(18px);
+}
+
+
+.ann-overlay--open {
+  display: flex;
+}
+
+.ann-card {
+  width: min(480px, 100%);
+  padding: 1.5rem 1.6rem 1.35rem;
+
+  /* wie .card aus der Bucket-App */
+  border-radius: 28px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(
+      rgb(var(--glass-rgb) / var(--card-alpha)),
+      rgb(var(--glass-rgb) / var(--card-alpha))
+    ) padding-box,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 55%, transparent),
+      color-mix(in srgb, var(--accent-2) 55%, transparent)
+    ) border-box;
+  box-shadow: var(--shadow);
+
+  color: var(--ink);
+  font-family: inherit;
+}
+
+
+.ann-card__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ann-card__body {
+  margin: 0 0 1.15rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+}
+
+.ann-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+/* Felder im Admin-Dialog */
+
+.ann-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.ann-field {
+  display: block;
+}
+
+.ann-field__label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 0.2rem;
+}
+
+.ann-input,
+.ann-textarea {
+  width: 100%;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.75);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+}
+
+.ann-input:focus,
+.ann-textarea:focus {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6);
+}
+
+.ann-textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+/* Buttons */
+
+.ann-btn {
+  border-radius: 999px;
+  border: none;
+  padding: 0.45rem 1.15rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+.ann-btn--primary {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #0b1120;
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.35);
+}
+
+.ann-btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 40px rgba(34, 197, 94, 0.4);
+}
+
+.ann-btn--primary:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.5);
+}
+
+.ann-btn--ghost {
+  background: transparent;
+  color: #9ca3af;
+}
+
+.ann-btn--ghost:hover {
+  color: #e5e7eb;
+  background: rgba(15, 23, 42, 0.8);
+}
+/* kleine Anpassung für Smartphones */
+
+@media (max-width: 640px) {
+  .ann-card {
+    padding: 1.25rem 1.1rem 1.1rem;
+    border-radius: 1rem;
+  }
+
+  .ann-admin-trigger {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}
