@@ -1,3 +1,24 @@
+// Importe
+import {
+  initPressablePop,
+  attachRipple,
+  openModal,
+  closeModal,
+  initModalBackdropAndEsc,
+  initTheme,
+  initThemeSegment,
+  initBackgroundSelector,
+  applyRangeFill,
+  wireRangeFill,
+  setupFloatingField,
+  initFloatingFields,
+  showToastMessage
+} from "../global/ui.js";
+
+initPressablePop();
+initModalBackdropAndEsc();
+
+
 // ===== Helpers =====
 function q(sel, root=document){ return root.querySelector(sel); }
 function loadJSON(key){ try{ return JSON.parse(localStorage.getItem(key)); }catch{ return null; } }
@@ -399,8 +420,6 @@ function setSidebarCollapsed(collapsed){
   el.addEventListener("transitionend", onEnd, { once: true });
 }
 
-
-
 function openSidebar(){
   setSidebarCollapsed(false);
 }
@@ -411,8 +430,6 @@ function toggleSidebar(){
   setSidebarCollapsed(!isSidebarCollapsed());
 }
 
-/* Initialisiert den Menü-Button & wendet gespeicherten Zustand an */
-/* Initialisiert den Menü-Button & wendet gespeicherten Zustand an */
 /* Initialisiert den Menü-Button & wendet gespeicherten Zustand an */
 function initSidebarToggle(){
   const el = document.getElementById("sidebar");
@@ -476,7 +493,6 @@ function applyPrefs(){
   setAppTitleUI();
 }
 
-
 // ===== Elements =====
 const profileBadge      = q("#profileBadge");
 const profileText       = q("#profileText");
@@ -492,14 +508,13 @@ const openProfileBtn    = q("#openProfile");
 const profileCancel     = q("#profileCancel");
 function refreshFloatingListField(){ setupFloatingField(listCreateName); }
 
-
-
 // === Settings: neue Fullscreen-Navigation ===
 const settingsNav      = q("#settingsNav");
 const settingsDesign   = q("#settingsDesign");
 const settingsMisc     = q("#settingsMisc");
 const settingsAccount  = q("#settingsAccount");
 const settingsVersion  = q("#settingsVersion");
+
 // Konto-Panel (Settings → Konto)
 const accountForm          = q("#accountForm");
 const accountEmail         = q("#accountEmail");
@@ -510,8 +525,6 @@ const accountAvatarPreview = q("#accountAvatarPreview");
 const accountReset         = q("#accountReset");
 const accountIdInput       = q("#accountId");
 const accountIdCopyBtn     = q("#accountIdCopy");
-
-
 const navDesign        = q("#navDesign");
 const navMisc          = q("#navMisc");
 const navAccount       = q("#navAccount");
@@ -548,20 +561,7 @@ let _settingsView = "design"; // default beim Öffnen
   }
 })();
 
-
-
-// === Floating-Label Helpers (Profil) ===
-function setupFloatingField(el){
-  if (!el) return;
-  const wrap = el.closest(".ff");
-  if (!wrap) return;
-  const sync = () => wrap.classList.toggle("has-value", !!el.value.trim());
-  // beim Tippen / Verlassen Wert prüfen
-  el.addEventListener("input", sync);
-  el.addEventListener("blur", sync);
-  // Initialzustand
-  sync();
-}
+// === Floating-Label ===
 
 function refreshFloatingProfileFields(){
   setupFloatingField(profileFirst);
@@ -585,22 +585,6 @@ const emptyText = q("#emptyText");
 
 const listButtonTpl = q("#listButtonTpl");
 const itemTpl = q("#itemTpl");
-
-// Press-Pop beim Klick: kleiner -> loslassen -> Bounce
-function enablePressPop(el){
-  if (!el || el._pressPop) return;
-  el.addEventListener("click", () => {
-    el.classList.remove("pop"); // reset, falls noch dran
-    // Kurz warten, damit :active (scale .965) sichtbar war, dann Bounce
-    setTimeout(() => {
-      el.classList.add("pop");
-      el.addEventListener("animationend", () => el.classList.remove("pop"), { once:true });
-    }, 10);
-  });
-  el._pressPop = true;
-}
-enablePressPop(addListBtn);
-enablePressPop(addItemBtn);
 
 
 // Suche & Filter
@@ -629,7 +613,7 @@ const backgroundForm    = q("#backgroundForm");
 const backgroundApply   = q("#backgroundApply");
 const backgroundCancel  = q("#backgroundCancel");
 
-// 🔁 NEU – robustes Umschalten von Einstellungen → Konto
+// Robustes Umschalten von Einstellungen → Konto
 const openAccountFromSettings = document.getElementById('openAccount');
 if (openAccountFromSettings && !openAccountFromSettings._wired) {
   openAccountFromSettings._wired = true;
@@ -653,8 +637,6 @@ if (openAccountFromSettings && !openAccountFromSettings._wired) {
     });
   });
 }
-
-
 
 
 // Repeat-Felder
@@ -697,6 +679,7 @@ const cardOpacityValue = q("#cardOpacityValue");
 const themeGrid = q("#themeGrid");
 const modeSegment = q("#modeSegment");
 const galaxyCanvas = document.getElementById("galaxyCanvas");
+
 // Layout-Regler (Settings)
 const cardScaleRange = q("#cardScaleRange");
 const cardScaleValue = q("#cardScaleValue");
@@ -732,7 +715,7 @@ function buildThemeGrid(){
 // einmalig beim Laden erzeugen
 buildThemeGrid();
 
-// NEU: Listen-Erstellung (Sofort vs. Modal)
+// Listen-Erstellung (Sofort vs. Modal)
 const listCreateModeSegment = q("#listCreateModeSegment");
 const notebookOpenModeSegment = q("#notebookOpenModeSegment");
 
@@ -830,7 +813,6 @@ function populateAccountPane(){
 }
 
 
-
 function markActiveSettingsNav(view){
   [navDesign, navMisc, navAccount, navVersion].forEach(btn=>{
     if (!btn) return;
@@ -840,45 +822,9 @@ function markActiveSettingsNav(view){
   });
 }
 
-
-
-
-
-
-// === Click-Ripple für Buttons/Kacheln (Mode + Themes) ===
-function attachRipple(container, buttonSelector){
-  if (!container) return;
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest(buttonSelector);
-    if (!btn || !container.contains(btn)) return;
-
-    // Position/Größe bestimmen
-    const rect = btn.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    const x = (e.clientX ?? (rect.left + rect.width/2)) - rect.left - size/2;
-    const y = (e.clientY ?? (rect.top + rect.height/2)) - rect.top  - size/2;
-
-    // Element erzeugen
-    const dot = document.createElement("span");
-    dot.className = "ripple";
-    dot.style.setProperty("--rs", size + "px");
-    dot.style.setProperty("--rx", x + "px");
-    dot.style.setProperty("--ry", y + "px");
-    btn.appendChild(dot);
-    dot.addEventListener("animationend", () => dot.remove(), { once:true });
-
-    // kurzer „Clicked“-State für Swatches
-    if (btn.classList.contains("theme-swatch")){
-      btn.classList.add("clicked");
-      setTimeout(()=> btn.classList.remove("clicked"), 220);
-    }
-  });
-}
-
 // aktivieren
 attachRipple(modeSegment, ".seg-btn");
 attachRipple(themeGrid, ".theme-swatch");
-
 
 // Splitter (zwischen Sidebar und Content)
 const sidebarResizer = q("#sidebarResizer");
@@ -892,7 +838,6 @@ const progressBar = q("#progressBar");
 const progressText = q("#progressText");
 
 // ===== Helpers (dates etc.) =====
-
 function buildSubtaskRow(data = { id: uid(), text: "", done: false }) {
   const row = document.createElement("div");
   row.className = "subtask-row";
@@ -907,7 +852,7 @@ function buildSubtaskRow(data = { id: uid(), text: "", done: false }) {
   const removeBtn = row.querySelector(".subtask-remove");
   removeBtn.addEventListener("click", () => row.remove());
 
-  // NEU: Shift+Enter erzeugt eine neue Unteraufgabe unterhalb & fokussiert sie
+  // Shift+Enter erzeugt eine neue Unteraufgabe unterhalb & fokussiert sie
   const inputEl = row.querySelector(".subtask-input");
   inputEl.addEventListener("keydown", (ev) => {
     if (ev.key === "Enter" && ev.shiftKey) {
@@ -984,7 +929,6 @@ function renderSubtasksPreview(ul, item) {
 }
 
 
-
 function renderProfileBadge(){
   if (!profileBadge || !profileText) return;
 
@@ -1019,6 +963,7 @@ function setAppTitleUI(){
   }
 }
 
+
 function maybeShowProfileOnFirstRun(){
   const hasName = (prefs.profile?.first || "").trim() && (prefs.profile?.last || "").trim();
   if (!hasName){
@@ -1047,6 +992,8 @@ const getSelectedList = () => getListById(state.selectedListId);
     if (sideWidthRange) applyRangeFill(sideWidthRange);   
 
   }
+
+
   function onUp(){
     if (!dragging) return;
     dragging = false;
@@ -1057,6 +1004,7 @@ const getSelectedList = () => getListById(state.selectedListId);
     window.removeEventListener("touchend", onUp);
     savePrefs();
   }
+
 
   sidebarResizer.addEventListener("mousedown", (e)=>{
     dragging = true; startX = e.clientX; startW = prefs.ui.sideW || 280;
@@ -1072,6 +1020,7 @@ const getSelectedList = () => getListById(state.selectedListId);
   }, {passive:true});
 })();
 
+
 // Hintergrund-Dropdown
 if (bgSelect && !bgSelect._wired){
   bgSelect.addEventListener("change", () => {
@@ -1084,6 +1033,7 @@ if (bgSelect && !bgSelect._wired){
   });
   bgSelect._wired = true;
 }
+
 
 // Profilbild-Datei → Data-URL lesen & Vorschau aktualisieren
 if (profileImageInput && !profileImageInput._wired){
@@ -1376,16 +1326,6 @@ function createStarfield(canvas){
   return { start, stop };
 }
 
-
-// ===== Button pop animation =====
-document.addEventListener("click", (e)=>{
-  const btn = e.target.closest(".pressable");
-  if(!btn) return;
-  btn.classList.remove("pop");
-  requestAnimationFrame(()=> btn.classList.add("pop"));
-  btn.addEventListener("animationend", ()=> btn.classList.remove("pop"), { once:true });
-});
-
 // ===== Drawer open/close =====
 function openDrawer(){
   drawer.classList.add("open");
@@ -1445,12 +1385,8 @@ function exportBackup(){
   a.remove();
 
   // Nach erfolgreichem Export:
-showToast({
-  title: 'Erfolgreich',
-  subtitle: 'Erfolgreich exportiert',
-  duration: 5000,                  // 5s, gerne anpassen
-  accentColor: '#22c55e'           // grün für die Progressbar (optional)
-});
+showToastMessage("Erfolgreich", "Importiert");
+
 
 }
 
@@ -2062,111 +1998,6 @@ function updateProgress(list, visibleItems=[]){
   animateProgressTo(pct, done, total);
 }
 
-function showToast({
-  title = '',
-  subtitle = '',
-  duration = 5000,
-  accentColor,
-  iconSVG
-} = {}) {
-  // Root sicherstellen
-  let root = document.getElementById('toast-root');
-  if (!root) {
-    root = document.createElement('div');
-    root.id = 'toast-root';
-    root.setAttribute('aria-live', 'polite');
-    root.setAttribute('aria-atomic', 'true');
-    document.body.appendChild(root);
-  }
-
-  // Default-Icon (großer grüner Haken)
-  const checkSVG = `
-    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
-      <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M6.5 12.5l3.5 3.5 7.5-7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  `;
-
-  // Toast-Element
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.setAttribute('role', 'status');
-
-  // Icon + Text + Close
-  toast.innerHTML = `
-    <div class="toast-icon" style="color: #22c55e;">${iconSVG || checkSVG}</div>
-    <div class="toast-body">
-      <div class="toast-title"> ${title} </div>
-      <div class="toast-subtitle"> ${subtitle} </div>
-    </div>
-    <button class="toast-close" aria-label="Schließen">×</button>
-    <div class="progress">
-      <div class="bar" ${accentColor ? `style="background:${accentColor};"` : ''}></div>
-    </div>
-  `;
-
-  // Close-Verhalten
-  const closeBtn = toast.querySelector('.toast-close');
-  const bar = toast.querySelector('.progress .bar');
-
-  let closed = false;
-  let closeTimer;
-
-  function closeToast() {
-    if (closed) return;
-    closed = true;
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-6px)';
-    setTimeout(() => {
-      toast.remove();
-    }, 180);
-  }
-
-  closeBtn.addEventListener('click', closeToast);
-
-  // ESC schließt den zuletzt erschienenen Toast
-  const escHandler = (e) => {
-    if (e.key === 'Escape') {
-      document.removeEventListener('keydown', escHandler);
-      closeToast();
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-
-  // Einfügen & kleine Enter-Animation
-  toast.style.opacity = '0';
-  toast.style.transform = 'translateY(-6px)';
-  root.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.style.transition = 'opacity .18s ease, transform .18s ease';
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
-  });
-
-  // Progressbar animieren (linear)
-  if (bar) {
-    // Dauer dynamisch setzen
-    bar.style.transitionDuration = `${duration}ms`;
-    // Start → Ende
-    requestAnimationFrame(() => {
-      bar.style.width = '0%';
-    });
-  }
-
-  // Auto-Close
-  if (duration > 0) {
-    closeTimer = setTimeout(closeToast, duration);
-  }
-
-  // Cleanup, falls manuell vorher geschlossen
-  toast.addEventListener('remove', () => {
-    if (closeTimer) clearTimeout(closeTimer);
-    document.removeEventListener('keydown', escHandler);
-  });
-
-  return closeToast; // optional: manuelles Schließen via Rückgabefunktion
-}
-
 // ===== Drag utils: Items =====
 const dropMarker = document.createElement("li"); dropMarker.className = "drop-marker";
 function clearDropMarker(){ if (dropMarker.parentElement) dropMarker.parentElement.removeChild(dropMarker); }
@@ -2529,22 +2360,6 @@ if (themeGrid) themeGrid.addEventListener("click", (e)=>{
 });
 
 
-/* === Range-Füllung: setzt --val (0–100%) für die gefärbte Track-Hälfte === */
-function applyRangeFill(el){
-  if (!el) return;
-  const min = Number(el.min || 0);
-  const max = Number(el.max || 100);
-  const val = Number(el.value || min);
-  const pct = (max > min) ? Math.round(((val - min) / (max - min)) * 100) : 0;
-  el.style.setProperty('--val', pct + '%');
-}
-function wireRangeFill(el){
-  if (!el || el._wireFill) return;
-  el._wireFill = true;
-  applyRangeFill(el);
-  el.addEventListener('input', () => applyRangeFill(el));
-}
-
 // === Darstellung umschalten (light|dark|galaxy) ===
 if (modeSegment) modeSegment.addEventListener("click", (e)=>{
   const b = e.target.closest(".seg-btn");
@@ -2610,62 +2425,6 @@ function markActiveMode(){
     b.setAttribute("aria-pressed", active ? "true" : "false");
   });
 }
-
-// ===== Modal infra (robust) =====
-function openModal(m){
-  if (!m) return;
-  // Sichtbar machen, bevor Klassen gesetzt werden
-  m.style.display = 'block';
-  m.classList.remove('closing');
-  m.classList.add('open');
-  m.setAttribute('aria-hidden','false');
-}
-
-function closeModal(m){
-  if (!m || (!m.classList.contains('open') && !m.classList.contains('closing'))) return;
-
-  // Sofort interaktionslos machen, um "Blockiert"-Effekt zu vermeiden
-  m.setAttribute('aria-hidden','true');
-  m.classList.add('closing');
-  m.classList.remove('open');
-
-  const dlg = m.querySelector('.modal-dialog');
-  let cleaned = false;
-
-  const cleanup = () => {
-    if (cleaned) return;
-    cleaned = true;
-    m.classList.remove('closing', 'open');
-    m.style.display = 'none';
-    dlg?.removeEventListener('animationend', cleanup);
-    dlg?.removeEventListener('transitionend', cleanup);
-
-  };
-
-  // Sowohl Animations- als auch Transitions-Ende abfangen
-  if (dlg) {
-    dlg.addEventListener('animationend', cleanup, { once: true });
-    dlg.addEventListener('transitionend', cleanup, { once: true });
-    // Fallback, falls gar kein Event feuert (z. B. reduzierte Bewegung, CSS-Änderungen)
-    setTimeout(cleanup, 360);
-  } else {
-    // Kein Dialog gefunden → sofort aufräumen
-    cleanup();
-  }
-}
-
-
-document.addEventListener("click", (e)=>{
-  if (e.target.classList?.contains("modal-backdrop")){
-    const m = e.target.parentElement; if (m) closeModal(m);
-  }
-});
-document.addEventListener("keydown", (e)=>{
-  if (e.key === "Escape"){
-    if (settingsModal?.classList.contains("open")) closeModal(settingsModal);
-    if (modal?.classList.contains("open")) closeModal(modal);
-  }
-});
 
 // Initialwerte setzen, wenn Modal geöffnet wird
 function hydrateLayoutControls(){
