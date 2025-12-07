@@ -1,5 +1,6 @@
 // chat.js
 import "../shared/supabase.js";
+import { initAnnouncementListener } from "../announcement/announcement-client.js";
 
 // Auf Supabase warten
 const waitForSB = () =>
@@ -9,10 +10,18 @@ const waitForSB = () =>
   });
 
 await waitForSB();
+
 if (!window.__SB_USER__) {
   const returnTo = encodeURIComponent("/Chat/chat.html");
   location.replace(`../login/login.html?returnTo=${returnTo}`);
+  throw new Error("Kein User – Redirect zu Login");
 }
+
+// Broadcast-Meldungen für Chat aktivieren
+initAnnouncementListener().catch(console.error);
+
+// >>> darunter bleibt dein bisheriger Chat-Code unverändert
+
 
 const sb = window.sb;
 const me = window.__SB_USER__.id;
@@ -29,6 +38,12 @@ const newChatModal = document.getElementById("newChatModal");
 const newChatList  = document.getElementById("newChatList");
 const newChatClose = document.getElementById("newChatClose");
 const newChatEmpty = document.getElementById("newChatEmpty");
+// NEU: Einstellungen / Theme
+const settingsBtn      = document.getElementById("settingsBtn");
+const settingsModal    = document.getElementById("settingsModal");
+const settingsClose    = document.getElementById("settingsClose");
+const themeOptions     = document.querySelectorAll(".settings-theme-option");
+
 
 const searchInput   = document.getElementById("chatRecipientInput");
 const searchResults = document.getElementById("chatRecipientResults");
@@ -162,23 +177,58 @@ async function openChat(peerId) {
     .order("created_at", { ascending: true });
 
   if (error) return alert("Fehler beim Laden der Nachrichten: " + error.message);
-  data.forEach(renderMessage);
+  (data ?? []).forEach(renderMessage);
+  updateReadIndicators();
 
-// Realtime-Subscription: höre auf ALLE Inserts und filtere im Callback auf dieses 1:1
-subscription = sb
-  .channel("room:" + [me, peerId].sort().join("-"))
-  .on(
-    "postgres_changes",
-    { event: "INSERT", schema: "public", table: "messages" },
-    (payload) => {
-      const msg = payload.new;
-      const isBetween =
-        (msg.sender_id === me && msg.receiver_id === peerId) ||
-        (msg.sender_id === peerId && msg.receiver_id === me);
-      if (isBetween) renderMessage(msg);
-    }
-  )
-  .subscribe();
+  // alle eingehenden Nachrichten dieses Kontakts als gelesen markieren
+  const now = new Date().toISOString();
+  const { error: readErr } = await sb
+    .from("messages")
+    .update({ read_at: now })
+    .eq("receiver_id", me)
+    .eq("sender_id", peerId)
+    .is("read_at", null);  // nur ungelesene
+
+  if (readErr) {
+    console.warn("Lesebestätigungen konnten nicht aktualisiert werden:", readErr);
+  }
+
+  // Realtime-Subscription: Inserts + Updates
+  subscription = sb
+    .channel("room:" + [me, peerId].sort().join("-"))
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "messages" },
+      (payload) => {
+        const msg = payload.new;
+        const isBetween =
+          (msg.sender_id === me && msg.receiver_id === peerId) ||
+          (msg.sender_id === peerId && msg.receiver_id === me);
+
+        if (!isBetween) return;
+
+        // Nachricht im UI anzeigen
+        renderMessage(msg);
+
+        // Wenn ICH der Empfänger bin und der Chat offen ist:
+        // sofort als gelesen markieren -> triggert UPDATE beim Sender
+        markAsReadIfVisible(msg);
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "messages" },
+      (payload) => {
+        const msg = payload.new;
+        const isBetween =
+          (msg.sender_id === me && msg.receiver_id === peerId) ||
+          (msg.sender_id === peerId && msg.receiver_id === me);
+        if (isBetween) applyMessageUpdate(msg);
+      }
+    )
+    .subscribe();
+
+
 
 }
 
@@ -306,6 +356,116 @@ if (newChatBtn && !newChatBtn._wired) {
   });
 }
 
+/* ---------- Einstellungen & Theme ---------- */
+
+const THEME_KEY = "chat-theme";
+
+/**
+ * Aktiviert das gewünschte Theme und aktualisiert Button-States.
+ */
+function applyTheme(theme) {
+  const t = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  try {
+    localStorage.setItem(THEME_KEY, t);
+  } catch (e) {
+    console.warn("Theme konnte nicht gespeichert werden:", e);
+  }
+
+  if (themeOptions && themeOptions.forEach) {
+    themeOptions.forEach((btn) => {
+      const isActive = btn.dataset.theme === t;
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+  }
+}
+
+/**
+ * Liest Theme aus localStorage oder nutzt Default (dark).
+ */
+function initThemeFromStorage() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem(THEME_KEY);
+  } catch (e) {
+    console.warn("Theme konnte nicht aus localStorage gelesen werden:", e);
+  }
+
+  const preferred = stored === "light" || stored === "dark" ? stored : "dark";
+  document.documentElement.setAttribute("data-theme", preferred);
+
+  if (themeOptions && themeOptions.forEach) {
+    themeOptions.forEach((btn) => {
+      const isActive = btn.dataset.theme === preferred;
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+  }
+}
+
+/**
+ * Öffnen/Schließen des Einstellungs-Modals.
+ */
+function openSettingsModal() {
+  if (!settingsModal) return;
+  settingsModal.classList.add("open");
+  settingsModal.setAttribute("aria-hidden", "false");
+}
+
+function closeSettingsModal() {
+  if (!settingsModal) return;
+  settingsModal.classList.remove("open");
+  settingsModal.setAttribute("aria-hidden", "true");
+}
+
+/* Event-Listener für Einstellungen */
+
+if (settingsBtn && !settingsBtn._wired) {
+  settingsBtn._wired = true;
+  settingsBtn.addEventListener("click", () => {
+    openSettingsModal();
+  });
+}
+
+if (settingsClose && !settingsClose._wired) {
+  settingsClose._wired = true;
+  settingsClose.addEventListener("click", () => {
+    closeSettingsModal();
+  });
+}
+
+// Klick auf Backdrop schließt das Modal
+if (settingsModal && !settingsModal._backdropWired) {
+  settingsModal._backdropWired = true;
+  settingsModal.addEventListener("click", (e) => {
+    if (e.target.classList.contains("chat-modal-backdrop")) {
+      closeSettingsModal();
+    }
+  });
+}
+
+// ESC-Taste schließt das Modal
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeSettingsModal();
+  }
+});
+
+// Klick auf Theme-Buttons
+if (themeOptions && themeOptions.forEach) {
+  themeOptions.forEach((btn) => {
+    if (btn._wired) return;
+    btn._wired = true;
+    btn.addEventListener("click", () => {
+      const t = btn.dataset.theme;
+      applyTheme(t);
+    });
+  });
+}
+
+// Initial Theme setzen
+initThemeFromStorage();
 
 
 /* ---------- Senden ---------- */
@@ -357,12 +517,86 @@ function renderMessage(msg) {
 
   const li = document.createElement("li");
   li.className = "msg " + (msg.sender_id === me ? "me" : "them");
+
+  if (msg.id) li.dataset.msgId = msg.id;
+  if (msg.read_at) li.dataset.read = "true";
+
   li.innerHTML = `
-    <div>${escapeHTML(msg.text)}</div>
-    <div class="meta">${new Date(msg.created_at).toLocaleString()}</div>
+    <div class="msg-bubble">
+      <div class="msg-text">${escapeHTML(msg.text)}</div>
+    </div>
+    <div class="meta"></div>
   `;
+
   messageList.appendChild(li);
   messageList.scrollTop = messageList.scrollHeight;
+  updateReadIndicators();
+}
+
+
+// zeigt "Gelesen" nur, wenn die letzte Nachricht von mir ist UND gelesen wurde
+function updateReadIndicators() {
+  if (!messageList) return;
+
+  // alle "Gelesen"-Texte bei eigenen Nachrichten leeren
+  messageList.querySelectorAll(".msg.me .meta").forEach((el) => {
+    el.textContent = "";
+  });
+
+  const allMessages = [...messageList.querySelectorAll(".msg")];
+  if (!allMessages.length) return;
+
+  const lastMsg = allMessages[allMessages.length - 1];
+
+  // Nur anzeigen, wenn die letzte Nachricht von mir ist und als gelesen markiert wurde
+  if (!lastMsg.classList.contains("me")) return;
+  if (lastMsg.dataset.read !== "true") return;
+
+  const meta = lastMsg.querySelector(".meta");
+  if (meta) {
+    meta.textContent = "Gelesen";
+  }
+}
+
+
+// wird bei UPDATE-Events aus Supabase genutzt (read_at ändert sich)
+function applyMessageUpdate(msg) {
+  if (!msg || !msg.id) return;
+
+  const li = messageList.querySelector(`.msg[data-msg-id="${msg.id}"]`);
+  if (!li) return;
+
+  if (msg.read_at) {
+    li.dataset.read = "true";
+  } else {
+    delete li.dataset.read;
+  }
+  updateReadIndicators();
+}
+
+// Wenn der Chat mit dem Absender gerade offen ist und ich Empfänger bin,
+// Nachricht sofort als gelesen markieren
+async function markAsReadIfVisible(msg) {
+  if (!msg || !msg.id) return;
+
+  // Ich bin Empfänger?
+  if (msg.receiver_id !== me) return;
+
+  // Aktiver Chat genau mit diesem Absender?
+  if (msg.sender_id !== activePeerId) return;
+
+  // Schon gelesen?
+  if (msg.read_at) return;
+
+  const { error } = await sb
+    .from("messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", msg.id)
+    .is("read_at", null);
+
+  if (error) {
+    console.warn("Konnte Nachricht nicht als gelesen markieren:", error);
+  }
 }
 
 
