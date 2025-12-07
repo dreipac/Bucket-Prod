@@ -1,104 +1,37 @@
-/* ---------- Base & Variables ---------- */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-
-:root{
-  --glass-rgb: 22 24 28;
-  --glass-alpha: .58;
-  --glass-strong-alpha: .75;
-  --card-alpha: .82;
-
-  --accent: #22b0ff;
-  --accent-2: #7c4dff;
-
-  --ink: #e9eef6;
-  --ink-strong: #fff;
-  --ink-inverse: #0b1220;
-  --muted: #b9c0c9;
-
-  --success: #2ecc71;
-  --danger: #ff6b6b;
-
-  --radius: 18px;
-  --shadow: 0 12px 36px rgba(0,0,0,.4);
-
-  --bg: #101317;
-  --overlay-dark: .55;
-  --overlay-light: .18;
-}
-
-/* Dark/Light */
-html[data-theme="dark"]{
-  --glass-rgb: 22 24 28;
-  --ink: #e9eef6; --ink-strong:#fff; --ink-inverse:#0b1220; --bg:#101317;
-}
-html[data-theme="light"]{
-  --glass-rgb: 255 255 255;
-  --ink: #0b1220; --ink-strong:#0b1220; --ink-inverse:#e9eef6; --bg:#f6f8fb;
-}
-
-body{
-  margin: 0; color: var(--ink);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: var(--bg);
-}
-body::before{
-  content:""; position:fixed; inset:0; z-index:-1;
-  background:
-    radial-gradient(60% 80% at 10% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 60%),
-    radial-gradient(80% 60% at 100% 100%, color-mix(in srgb, var(--accent-2) 30%, transparent), transparent 60%),
-    linear-gradient(rgba(10,12,15, var(--overlay-dark)), rgba(10,12,15, var(--overlay-dark))),
-    var(--bg-url, url("background/zurich.png")) center/cover no-repeat fixed;
-
-  filter: saturate(1.05);
-}
-html[data-theme="light"] body::before{
-  background:
-    radial-gradient(60% 80% at 10% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
-    radial-gradient(80% 60% at 100% 100%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 60%),
-    linear-gradient(rgba(255,255,255, var(--overlay-light)), rgba(255,255,255, var(--overlay-light))),
-    var(--bg-url, url("background/zurich.png")) center/cover no-repeat fixed;
-
-}
-
-/* ==== Galaxy Blue Theme ==== */
-html[data-theme="galaxy"]{
-  /* Snapchat-Plus-Blau als Akzent */
-  --accent: #0EA5FF;          /* primäres Blau */
-  --accent-ink: #ffffff;      /* Text auf Akzent */
-  --ink: #E7F6FF;             /* Primärtext */
-  --ink-dim: #B6E1FF;         /* gedimmter Text */
-  --surface: rgba(8,16,28,0.55);
-  --glass-rgb: 10 30 60;      /* Glass-Look Blau */
-  --card: rgba(10, 22, 45, 0.55);
-  --border: rgba(14,165,255,0.22);
-  background-color: #050A14;
-}
-
-/* sanfter Nebula-Glow über dem Hintergrundbild (durch Canvas ergänzt) */
-html[data-theme="galaxy"] body{
-  background-blend-mode: overlay;
-}
-
-/* ==== Galaxy Canvas Overlay ==== */
-#galaxyCanvas{
-  position: fixed;
-  inset: 0;
-  z-index: -1;              /* unter dem UI, über dem Body-Bg */
-  pointer-events: none;
-  opacity: 0;               /* nur im Galaxy-Modus sichtbar */
-  transition: opacity .4s ease;
-}
-html[data-theme="galaxy"] #galaxyCanvas{ opacity: 1; }
-
-
-.glass{ background: rgb(var(--glass-rgb) / var(--glass-strong-alpha)); backdrop-filter: blur(10px); box-shadow: var(--shadow); border-radius: var(--radius); }
 
 /* ---------- Topbar ---------- */
-.topbar{ display:flex; align-items:center; gap:12px; padding:10px 16px; margin:18px; }
-.topbar h1{ font-size:22px; margin:0; }
-.topbar .topbar-actions{ margin-left:auto; display:flex; align-items:center; gap:10px; }
-.icon-btn{ width:40px;height:40px;border-radius:12px;border:0;cursor:pointer;background:#3a3d42;color:#fff;display:grid;place-items:center; }
+.topbar{ 
+  display:flex; 
+  align-items:center; 
+  gap:12px; 
+  padding:10px 16px; 
+  margin:18px; 
+}
+
+.topbar h1{ 
+  font-size:22px; 
+  margin:0; 
+}
+
+.topbar .topbar-actions{ 
+  margin-left:auto; 
+  display:flex; 
+  align-items:center; 
+  gap:10px; 
+}
+
+.icon-btn{ 
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  border:0;
+  cursor:pointer;
+  background:#3a3d42;
+  color:#fff;
+  display:grid;
+  place-items:center; 
+}
+
 html[data-theme="light"] .icon-btn{ background:#e1e5ec; color:#0b1220; }
 .burger, .burger::before, .burger::after{ content:""; display:block; width:18px; height:2px; background:currentColor; border-radius:2px; position:relative; }
 .burger::before{ position:absolute; transform: translateY(-6px); }
@@ -149,30 +82,6 @@ html[data-theme="light"] .drag-handle.list{ color:#536072; }
 .list-drop-marker{ height:8px; margin:4px 0; border-radius:999px; background: linear-gradient(90deg,var(--accent),var(--accent-2)); }
 .list-row.drop-target .list-btn{ outline:2px dashed var(--accent); }
 
-/* ---------- Buttons "pop" (mit variabler Dauer) ---------- */
-:root{
-  /* Basisdauer für Button-Press-Animation – wird von JS überschrieben */
-  --press-dur: 220ms;
-}
-
-.pressable{
-  will-change: transform, filter;
-  transition:
-    transform var(--press-dur) cubic-bezier(.22,1,.36,1),
-    filter    var(--press-dur) ease,
-    box-shadow var(--press-dur) ease;
-}
-
-/* Bounce nach dem Loslassen: leicht über 1 skalieren, dann auf 1 zurück */
-.pressable.pop{
-  animation: press-pop var(--press-dur) ease-out;
-}
-@keyframes press-pop{
-  0%   { transform: scale(.965); }
-  60%  { transform: scale(1.035); }
-  100% { transform: scale(1); }
-}
-
 /* ---------- Content Top (Filters) ---------- */
 .content-top{ display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap: wrap; }
 .filters{ display:flex; align-items:center; gap:8px; margin-left:auto; }
@@ -196,19 +105,13 @@ html[data-theme="light"] .filters input[type="search"], html[data-theme="light"]
     repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 10px, rgba(255,255,255,0) 10px 20px);
   background-size: 200% 100%, 18px 18px; background-position: 0 0, 0 0;
 }
+
 .progress-bar.moving{ background-position: 100% 0, 40px 0; }
 .progress-text{ font-size:13px; color: var(--muted); }
 
 /* ---------- Items ---------- */
 .items{ list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:12px; }
 .items.drag-active{ outline:2px dashed var(--accent); outline-offset:6px; border-radius:16px; }
-
-.card{
-  position:relative; border-radius:28px; border:1px solid transparent;
-  background:
-    linear-gradient(rgb(var(--glass-rgb) / var(--card-alpha)), rgb(var(--glass-rgb) / var(--card-alpha))) padding-box,
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--accent-2) 55%, transparent)) border-box;
-}
 
 .item{
   display: grid;
@@ -356,62 +259,7 @@ html[data-theme="light"] .drag-handle{ color:#536072; }
 html[data-theme="light"] .drawer-link{ background:#f1f4f9; color:#0b1220; }
 html[data-theme="light"] .drawer-link:hover{ background:#e8ecf5; }
 
-/* ---------- Modal (shared) ---------- */
-.modal{
-  position: fixed;
-  inset: 0;
-  visibility: hidden;          /* statt display:none -> erlaubt Ausblend-Animation */
-  pointer-events: none;
-  z-index: 100;
-}
 
-/* Offen: klickbar */
-.modal.open{
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* Schließen-Phase: sichtbar (für die Out-Animation), aber klicktransparent */
-.modal.closing{
-  visibility: visible;
-  pointer-events: none;
-}
-
-/* Explizit versteckt: niemals blockieren */
-.modal[aria-hidden="true"]{
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-.modal-backdrop{
-  position:absolute; inset:0;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(2px);
-  opacity: 0;                   /* Startzustand für Fades */
-  transition: opacity .22s cubic-bezier(.22,1,.36,1);
-}
-
-/* Wenn Modal versteckt ist, darf nichts klicken/scrollen blockieren */
-.modal[aria-hidden="true"] {
-  pointer-events: none;
-}
-
-.modal[aria-hidden="true"] .modal-backdrop {
-  opacity: 0;
-  pointer-events: none;
-}
-
-
-.modal.open .modal-backdrop{ opacity: 1; }
-.modal.closing .modal-backdrop{ opacity: 0; }
-
-/* Deine bestehende Zentrierung/Grösse bitte beibehalten */
-.modal-dialog{
-  position:absolute; left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  width:min(760px, 94vw);
-  padding:22px;
-}
 /* ==== Item-Modal: Scrollbarer Body + sticky Actions ==== */
 #itemModal .modal-dialog{
   /* Begrenze die Gesamthöhe des Dialogs */
@@ -492,7 +340,6 @@ html[data-theme="light"] .label{ color:#38455b; }
 html[data-theme="light"] #fNotes{
   border-color: #c2c9d6;
 }
-
 
 html[data-theme="light"] #fTitle{ border-bottom-color:#c2c9d6; }
 .row{ display:flex; align-items:center; gap:12px; margin:14px 0; }
@@ -718,15 +565,11 @@ html[data-theme="light"] .seg-btn:hover{
 
 
 /* ----- Buttons global ----- */
-.btn{ border:0; border-radius:14px; padding:12px 16px; cursor:pointer; font-weight:700; line-height:1; transition: transform .05s ease, filter .15s ease, background .15s ease; user-select:none; }
 .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .btn:disabled{ opacity:.6; cursor:not-allowed; }
-.btn-primary{ color: var(--ink-inverse); background: linear-gradient(180deg, var(--accent-2), var(--accent)); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
 .btn-primary:hover{ filter: brightness(1.03); }
-.btn-muted{ background:#5b636d; color:#fff; }
 .btn-muted:hover{ filter: brightness(1.05); }
 html[data-theme="light"] .btn-muted{ background:#ccd3df; color:#0b1220; }
-.modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
 
 /* ----- Fancy Select / Filter Dropdowns ----- */
 .visually-hidden{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0 0 0 0) !important; white-space:nowrap !important; border:0 !important; }
@@ -1036,105 +879,6 @@ html[data-theme="light"] .editor-paper{
   border-radius: inherit;
 }
 
-/* === Notebook: weißes Editor-Fenster mit Titel/Datum wie OneNote === */
-
-/* dunkles/helles Thema: Editor bleibt bewusst weiß/schwarz */
-html[data-theme="dark"] .content.nb-col,
-html[data-theme="light"] .content.nb-col{
-  background: #fff !important;
-  color: #000;
-}
-
-/* === Notebook: volle Breite links, contenteditable statt Textarea === */
-
-/* rechte Spalte bleibt voll weiß, aber mit normalem Seitenpadding */
-.content.nb-col{
-  background: #ffffff !important;
-  color: #000000;
-  padding: 20px 24px; /* links/rechts etwas Luft */
-}
-
-/* Editor-Container nicht zentrieren, volle Breite nutzen */
-.editor-sheet{
-  max-width: 100%;
-  margin: 0;
-  padding: 8px 0 18px;
-  background: #ffffff;
-  color: #000;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  display: flex;             /* NEU */
-  flex-direction: column;    /* NEU */
-  min-height: 0;             /* NEU: nötig, damit .editor-body scrollen darf */
-}
-
-/* Titel bleibt einfach links */
-.editor-title{
-  width: 100%;
-  font-family: Calibri, "Segoe UI", Arial, sans-serif;
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 1.2;
-  color: #000;
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid #e5e7eb;  /* Unterlinie wie OneNote */
-  outline: none;
-  padding: 8px 0;
-}
-
-/* Datum/Meta direkt unter dem Titel */
-.editor-meta{
-  margin-top: 6px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-/* Schreibfläche: contenteditable – ohne Box, mit echten Zeilenumbrüchen */
-.editor-body{
-  /* Höhe nicht erzwingen – die Flex-Logik übernimmt das */
-  width: 100%;
-  font-family: Calibri, "Segoe UI", Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  color: #000;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  outline: none;
-  padding-top: 12px;
-
-  /* NEU/Ändert: eigenes Scrolling im Editor */
-  flex: 1;
-  min-height: 0;             /* WICHTIG: zusammen mit flex-Parent erlaubt Scrollbar */
-  overflow-y: auto;          /* Scrollbar in der Schreibfläche */
-  resize: none;              /* Resize-Griff unten rechts AUS */
-
-  /* Zeilenumbrüche wie in Editoren/Word */
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-
-
-/* Platzhalter für leeren contenteditable */
-.editor-body:empty:before{
-  content: attr(data-placeholder);
-  color: #9aa1ae;
-  pointer-events: none;
-}
-
-/* Sicherheit: alte Textarea-Styles nicht greifen lassen, falls das Element doch textarea wäre */
-textarea.editor-body{
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-#nbBackupSegment .seg-btn{ cursor: pointer; }
-#nbBackupSegment .seg-btn.active{ background: linear-gradient(180deg, var(--accent-2), var(--accent)); color: var(--ink-inverse); }
-
 /* === Status-Modal (Erfolg) === */
 .status-wrap{
   display:flex; align-items:center; gap:14px;
@@ -1154,105 +898,6 @@ textarea.editor-body{
   margin:6px 0 0; font-size: 14px; opacity:.9;
 }
 
-/* === Modal Buttons: Hover/Press + Ripple === */
-.modal .btn,
-.modal .pressable{
-  position: relative;
-  overflow: hidden;              /* für den Ripple */
-  transition: transform .08s ease, filter .18s ease, box-shadow .18s ease, background-color .18s ease;
-  will-change: transform, box-shadow;
-}
-
-.modal .btn:hover,
-.modal .pressable:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.22);
-  filter: brightness(1.03);
-}
-
-html[data-theme="light"] .modal .btn:hover,
-html[data-theme="light"] .modal .pressable:hover{
-  box-shadow: 0 8px 20px rgba(0,0,0,.12);
-}
-
-.modal .btn:active,
-.modal .pressable:active{
-  transform: translateY(1px) scale(.98);
-  filter: brightness(.98);
-  box-shadow: 0 4px 12px rgba(0,0,0,.18);
-}
-
-/* Tastaturfokus sichtbar */
-.modal .btn:focus-visible,
-.modal .pressable:focus-visible{
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Ripple-Element (per JS hinzugefügt) */
-.modal .ripple{
-  position: absolute;
-  border-radius: 999px;
-  transform: scale(0);
-  animation: rippleAnim .6s ease-out forwards;
-  background: currentColor;
-  opacity: .22;                  /* dezenter */
-  pointer-events: none;
-  mix-blend-mode: multiply;
-}
-@keyframes rippleAnim{
-  to{ transform: scale(16); opacity: 0; }
-}
-
-/* === Modal: Ein-/Ausblend-Animation (fixiert, ohne Springen) === */
-
-/* Safety: Dialog immer exakt zentrieren (falls Basis-Rule fehlt/überschrieben wurde) */
-.modal .modal-dialog{
-  will-change: transform, opacity;
-  /* ACHTUNG: Nur setzen, wenn du diese Eigenschaften nicht schon global definierst.
-     Falls du bereits in style.css (weiter oben) .modal-dialog mit position/left/top/transform definiert hast,
-     kannst du die nächsten vier Zeilen weglassen. */
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%); /* Basis-Zentrierung bleibt IMMER erhalten */
-}
-
-/* Beim Öffnen: subtil von leicht oberhalb in die Mitte fahren, ohne die Basis zu verlieren */
-.modal.open .modal-dialog{
-  animation: modalInCentered .22s cubic-bezier(.22,1,.36,1);
-}
-
-/* Beim Schließen: kurz zurück, weich ausfaden */
-.modal.closing .modal-dialog{
-  animation: modalOutCentered .16s ease-in forwards;
-}
-
-@keyframes modalInCentered{
-  from{
-    opacity: 0;
-    transform: translate(-50%, calc(-50% - 6px)) scale(.985); /* relativ zur Mitte */
-    filter: blur(1px);
-  }
-  to{
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    filter: none;
-  }
-}
-
-@keyframes modalOutCentered{
-  from{
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    filter: none;
-  }
-  to{
-    opacity: 0;
-    transform: translate(-50%, calc(-50% - 4px)) scale(.985);
-    filter: blur(.5px);
-  }
-}
 
 /* In-Animation (appear) */
 @keyframes editorIn {
@@ -1625,11 +1270,7 @@ body.sidebar-collapsed .sidebar{
 }
 
 /* Größeres Settings-Modal (mehr Platz für Optionen) */
-.modal-dialog.settings{
-  width: min(760px, 92vw);
-  max-height: 86vh;
-  padding: 18px;
-}
+
 .modal-dialog.settings .settings-section{
   margin-bottom: 16px;
 }
