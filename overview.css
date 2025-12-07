@@ -1,433 +1,790 @@
-// overview.js – Auth-Gate + Logout
-import "./shared/supabase.js";
-import { initAnnouncementListener } from "./announcement/announcement-client.js";
-import { setupAdminAnnouncementUI } from "./announcement/admin-broadcast.js";
-import { initCopyToast } from "./global/ui.js";
-
-// Auf Supabase warten
-const waitForSB = () =>
-  new Promise((resolve) => {
-    if (window.__SB_READY__) return resolve();
-    window.addEventListener("sb-ready", resolve, { once: true });
-  });
-
-await waitForSB();
-
-// Nicht eingeloggt? → zur Login-Seite
-if (!window.__SB_USER__) {
-  const returnTo = encodeURIComponent("/index.html");
-  location.replace(`./login/login.html?returnTo=${returnTo}`);
-  throw new Error("Kein User – Redirect zu Login");
+/* ----- Grundlayout: noch dunkleres Dark Theme ----- */
+:root{
+  --bg-0: #070b13;      /* sehr dunkel */
+  --bg-1: #0b1320;      /* Cards/Sidebar */
+  --bg-2: #0f1a2e;      /* Hover */
+  --text: #e6ecff;
+  --muted: #9fb0d0;
+  --acc-1: #7c4dff;
+  --acc-2: #22b0ff;
+  --ring: #2a3f66;
+  --shadow: rgba(0,0,0,0.45);
 }
 
-// Broadcast-System initialisieren
-initAnnouncementListener().catch(console.error);
-setupAdminAnnouncementUI().catch(console.error);
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 
-// >>> ab hier bleibt dein bisheriger Overview-Code (Profil, Kontakte, ...) unverändert
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  color: var(--text);
 
-// ---- Profilkarte in der Sidebar hydratisieren ----
-const profileAvatarEl = document.querySelector(".profile-avatar");
-const profileNameEl   = document.querySelector(".profile-name");
-const profileIdEl     = document.querySelector(".profile-id");
-
-// bucket_data.prefs laden (wie in der Bucket-App)
-async function loadBucketPrefs() {
-  const uid = window.__SB_USER__?.id;
-  if (!uid) return null;
-
-  const { data, error } = await window.sb
-    .from("bucket_data")
-    .select("prefs")
-    .eq("user_id", uid)
-    .single();
-
-  if (error) {
-    console.warn("loadBucketPrefs failed", error);
-    return null;
-  }
-  return data?.prefs || null;
+  /* 🔹 Hintergrundbild statt Verlauf */
+  background: url("./assets/background/overviewBackground.png") center center / cover no-repeat fixed;
+  background-color: #05070b; /* Fallback, falls Bild nicht lädt */
+}
+/* globaler Dark-Blur über dem Bild */
+.main::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 12, 0.35);
+  -webkit-backdrop-filter: blur(30px) saturate(140%);
+  backdrop-filter: blur(30px) saturate(140%);
+  z-index: -1;
 }
 
-// Konto-ID aus public.users besorgen (wie sbGetAccountId in app.js)
-async function loadAccountId() {
-  const uid = window.__SB_USER__?.id;
-  if (!uid) return "";
-
-  const { data, error } = await window.sb
-    .from("users")
-    .select("account_id")
-    .eq("user_id", uid)
-    .single();
-
-  if (error) {
-    console.warn("loadAccountId failed", error);
-    return "";
-  }
-  return data?.account_id || "";
-}
-
-async function hydrateProfileCard() {
-  const prefs = await loadBucketPrefs();
-
-  const first = (prefs?.profile?.first || "").trim();
-  const last  = (prefs?.profile?.last  || "").trim();
-  const name  = [first, last].filter(Boolean).join(" ");
-
-  // Name setzen
-  if (profileNameEl && name) {
-    profileNameEl.textContent = name;
-  }
-
-  // Avatar setzen (Data-URL aus prefs.profile.avatar), fallback auf Icon
-  if (profileAvatarEl) {
-    if (prefs?.profile?.avatar) {
-      profileAvatarEl.src = prefs.profile.avatar;
-      profileAvatarEl.alt = name ? `Profilbild von ${name}` : "Profilbild";
-    } else {
-      profileAvatarEl.src = "./assets/icons/userAvatar.png"; // Fallback
-      profileAvatarEl.alt = "Profilbild";
-    }
-  }
-
-  // Konto-ID aus public.users holen
-  if (profileIdEl) {
-    const accountId = await loadAccountId();
-    if (accountId) {
-      profileIdEl.textContent = accountId;
-    } else {
-      // Optional: wenn nix da ist, leerlassen oder "ohne Konto-ID"
-      // profileIdEl.textContent = "";
-    }
-  }
-}
-
-// nach dem Auth-Check starten
-hydrateProfileCard().catch(console.error);
-
-
-// Logout-Button
-const logoutBtn = document.getElementById("logoutBtn");
-logoutBtn?.addEventListener("click", async () => {
-  try {
-    await window.sb.auth.signOut();
-    const returnTo = encodeURIComponent("/index.html");
-    location.replace(`./login/login.html?returnTo=${returnTo}`);
-  } catch (e) {
-    // Optional: Fehlermeldung oder Toast
-    alert("Abmelden nicht möglich. Bitte erneut versuchen.");
-  }
-});
-
-async function handleAddContactClick() {
-  const inputId = prompt("Bitte gib die Konto-ID oder User-UUID ein:");
-  if (!inputId) return;
-
-  const me = window.__SB_USER__?.id;
-  if (!me) return alert("Nicht eingeloggt.");
-
-  const raw = inputId.trim();
-
-  // UUID erkennen
-  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-  // 1) Konto-ID -> user_id auflösen (oder direkte UUID übernehmen)
-  let targetUserId = null;
-  if (uuidRe.test(raw)) {
-    targetUserId = raw;
-  } else {
-    const { data: resolved, error: rErr } = await window.sb
-      .rpc("resolve_user_by_account_id", { account_id: raw });
-    if (rErr) return alert("Konto-ID konnte nicht geprüft werden: " + rErr.message);
-    if (!resolved) return alert("Konto-ID nicht gefunden.");
-    targetUserId = resolved;
-  }
-
-  if (targetUserId === me) return alert("Du kannst dich nicht selbst hinzufügen.");
-
-  // 2) Duplikate prüfen
-  const { data: existing, error: exErr } = await window.sb
-    .from("contacts")
-    .select("id,status")
-    .in("requester_id", [me, targetUserId])
-    .in("addressee_id", [me, targetUserId])
-    .limit(1);
-
-  if (exErr) return alert("Fehler beim Prüfen: " + exErr.message);
-  if (existing && existing.length) {
-    const st = existing[0].status;
-    return alert(st === "accepted"
-      ? "Ihr seid bereits verbunden."
-      : "Es existiert bereits eine Anfrage/Beziehung (" + st + ").");
-  }
-
-  // 3) Anfrage anlegen
-  const { error } = await window.sb.from("contacts").insert({
-    requester_id: me,
-    addressee_id: targetUserId,
-    status: "pending",
-  });
-
-  if (error) return alert("Anfrage konnte nicht gesendet werden: " + error.message);
-  alert("Kontaktanfrage gesendet. Die andere Person muss zustimmen.");
-}
-
-// alte Sidebar-Action (falls Button vorhanden ist)
-const addBtn = document.getElementById("addContactBtn");
-addBtn?.addEventListener("click", handleAddContactClick);
-
-// NEU: Button im „Kontakte verwalten“-Modal
-const manageAddBtn = document.getElementById("manageAddContactBtn");
-manageAddBtn?.addEventListener("click", handleAddContactClick);
-
-
-/* ===== Kontaktanfragen Modal ===== */
-
-// Elemente
-const pendingBtn = document.getElementById("pendingBtn");
-const pendingModal = document.getElementById("pendingModal");
-const pendingClose = document.getElementById("pendingClose");
-const pendingList = document.getElementById("pendingRequestsList");
-
-// Helfer: Modal öffnen/schließen
-function openPendingModal() {
-  if (!pendingModal) return;
-  pendingModal.classList.add("open");
-  pendingModal.setAttribute("aria-hidden", "false");
-  // Inhalt laden
-  renderPendingRequests();
-}
-
-function closePendingModal() {
-  if (!pendingModal) return;
-  pendingModal.classList.remove("open");
-  pendingModal.setAttribute("aria-hidden", "true");
-}
-
-// Daten laden
-async function fetchPendingRequests() {
-  const me = window.__SB_USER__?.id;
-  if (!me) return [];
-
-  const { data, error } = await window.sb
-    .from("contacts")
-    .select("id, requester_id, created_at")
-    .eq("addressee_id", me)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return [];
-  }
-  return data || [];
-}
-
-// Rendering
-async function renderPendingRequests() {
-  if (!pendingList) return;
-  pendingList.innerHTML = "";
-
-  const rows = await fetchPendingRequests();
-
-  if (!rows.length) {
-    const li = document.createElement("li");
-    li.className = "empty";
-    li.textContent = "Keine Kontaktanfragen.";
-    pendingList.appendChild(li);
-    return;
-  }
-
-  rows.forEach((row) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div>
-        <div><strong>Anfrage von:</strong> ${row.requester_id}</div>
-        <div class="meta">${new Date(row.created_at).toLocaleString()}</div>
-      </div>
-      <span class="row-actions">
-        <button data-accept="${row.id}">Annehmen</button>
-        <button data-decline="${row.id}">Ablehnen</button>
-      </span>
-    `;
-    pendingList.appendChild(li);
-  });
-}
-
-// Aktionen: Accept/Decline
-pendingList?.addEventListener("click", async (e) => {
-  const acceptId = e.target?.dataset?.accept;
-  const declineId = e.target?.dataset?.decline;
-
-  if (acceptId) {
-    const { error } = await window.sb.from("contacts")
-      .update({ status: "accepted" })
-      .eq("id", acceptId);
-    if (error) return alert("Fehler beim Annehmen: " + error.message);
-    await renderPendingRequests();
-  }
-
-  if (declineId) {
-    const { error } = await window.sb.from("contacts")
-      .update({ status: "declined" })
-      .eq("id", declineId);
-    if (error) return alert("Fehler beim Ablehnen: " + error.message);
-    await renderPendingRequests();
-  }
-});
-
-// Öffnen/Schließen binden
-pendingBtn?.addEventListener("click", openPendingModal);
-pendingClose?.addEventListener("click", closePendingModal);
-
-// Klick auf Backdrop oder Schließen-Buttons
-pendingModal?.addEventListener("click", (e) => {
-  if (e.target?.dataset?.close !== undefined) closePendingModal();
-});
-
-// ESC schließt Modal
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && pendingModal?.classList.contains("open")) {
-    closePendingModal();
-  }
-});
-
-/* ===== Kontakte Verwalten Modal ===== */
-
-// Elemente
-const manageBtn   = document.getElementById("manageContactsBtn");
-const manageModal = document.getElementById("manageContactsModal");
-const manageClose = document.getElementById("manageClose");
-const manageList  = document.getElementById("manageContactsList");
-
-// Modal öffnen/schließen
-function openManageModal() {
-  if (!manageModal) return;
-  manageModal.classList.add("open");
-  manageModal.setAttribute("aria-hidden", "false");
-  renderManagedContacts();
-}
-
-function closeManageModal() {
-  if (!manageModal) return;
-  manageModal.classList.remove("open");
-  manageModal.setAttribute("aria-hidden", "true");
-}
-
-// Daten laden: Alle akzeptierten Kontakte, an denen ICH beteiligt bin
-async function fetchManagedContacts() {
-  const me = window.__SB_USER__?.id;
-  if (!me) return [];
-
-  const { data, error } = await window.sb
-    .from("contacts")
-    .select("id, requester_id, addressee_id, created_at")
-    .or(`requester_id.eq.${me},addressee_id.eq.${me}`)
-    .eq("status", "accepted")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return [];
-  }
-  return data || [];
+/* Dunkler Blur-Schleier über der gesamten Seite (außer Sidebar) */
+.layout::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 12, 0.55); /* stärker abgedunkelt */
+  -webkit-backdrop-filter: blur(30px) saturate(140%);
+  backdrop-filter: blur(30px) saturate(140%);
+  z-index: -1;
 }
 
 
-// Rendering
-async function renderManagedContacts() {
-  if (!manageList) return;
-  manageList.innerHTML = "";
 
-  const me   = window.__SB_USER__?.id;
-  const rows = await fetchManagedContacts();
 
-  if (!rows.length) {
-    const li = document.createElement("li");
-    li.className = "empty";
-    li.textContent = "Du hast noch keine akzeptierten Kontakte hinzugefügt.";
-    manageList.appendChild(li);
-    return;
+
+/* ----- Layout (Sidebar links) ----- */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 84px 1fr;
   }
+}
 
-  rows.forEach((row) => {
-    // „Gegenüber“ ermitteln – die andere Person in der Beziehung
-    const otherId =
-      row.requester_id === me ? row.addressee_id : row.requester_id;
+/* ----- Sidebar ----- */
+.sidebar{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: linear-gradient(180deg, var(--bg-1), #0a1120);
+  border-right: 1px solid var(--ring);
+  padding: 1rem;
+}
 
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div>
-        <div><strong>Kontakt:</strong> ${otherId}</div>
-        <div class="meta">${new Date(row.created_at).toLocaleString()}</div>
-      </div>
-      <span class="row-actions">
-        <button data-remove="${row.id}">Entfernen</button>
-      </span>
-    `;
-    manageList.appendChild(li);
-  });
+.sidebar__brand{
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem .25rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+.brand-dot{
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--acc-1), var(--acc-2));
+  box-shadow: 0 0 0 3px rgba(124,77,255,0.15);
+}
+
+.brand-name{
+  font-size: 1rem;
+  opacity: .9;
+}
+
+.sidebar__nav{
+  margin-top: .5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.btn-logout{
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--ring);
+  background: transparent;
+  color: var(--text);
+  border-radius: 12px;
+  padding: .7rem .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+}
+.btn-logout:hover{
+  background: var(--bg-2);
+  border-color: #365281;
+  transform: translateY(-1px);
+}
+.btn-logout:active{ transform: translateY(0); }
+
+/* ----- Main ----- */
+.main{
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  padding: 2rem clamp(1rem, 3vw, 3rem);
+}
+
+/* Großes Logo oben */
+.hero{
+  display: grid;
+  place-items: center;
+  padding: 2rem 0 1rem;
+}
+.hero__logo{
+  width: min(450px, 60vw);
+  height: auto;
+  filter: drop-shadow(0 12px 24px var(--shadow));
+  opacity: .95;
+}
+
+/* App-Kachel-Grid: zentriert in der Mitte */
+.app-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.app-grid.single{
+  grid-template-columns: min(260px, 90vw);
+}
+
+.app-card {
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 1.2rem 1.4rem;
+  text-align: center;
+  backdrop-filter: blur(10px) saturate(120%);
+  transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  color: var(--text);
+  width: 250px;
+}
+.app-card.small{
+  padding: .9rem 1rem;
+}
+/* Hover-Effekt: gleich wie Sidebar */
+.app-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(122,162,255,.45);
+  background: linear-gradient(180deg, rgba(122,162,255,.16), rgba(122,162,255,.06));
+  box-shadow: 0 10px 24px rgba(122,162,255,.18);
+}
+
+.app-card img{
+  width: 48px;
+  height: 48px;
+  margin-bottom: .6rem;
+  opacity: .95;
+}
+
+.app-card h2{
+  margin: .2rem 0 .25rem;
+  font-size: 1rem;
+  letter-spacing: .2px;
+}
+
+.app-card p{
+  margin: 0 0 .6rem;
+  font-size: .85rem;
+  color: var(--muted);
+}
+
+.app-card .btn {
+  background: linear-gradient(180deg, var(--acc-1), var(--acc-2));
+  box-shadow: 0 6px 18px rgba(34,176,255,.4);
+  transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+}
+.app-card .btn:hover {
+  opacity: .92;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px rgba(122,162,255,.5);
 }
 
 
-// Entfernen-Action (löscht den Kontakt-Datensatz)
-manageList?.addEventListener("click", async (e) => {
-  const removeId = e.target?.dataset?.remove;
-  if (!removeId) return;
+/* Buttons */
+.btn{
+  display: inline-block;
+  margin-top: .4rem;
+  padding: .5rem 1.1rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--acc-1), var(--acc-2));
+  color: #fff;
+  font-weight: 700;
+  font-size: .9rem;
+  text-decoration: none;
+  border: 0;
+  box-shadow: 0 10px 20px -10px rgba(34,176,255,.5);
+  transition: transform .15s ease, opacity .15s ease;
+}
+.btn:hover{ opacity: .92; transform: translateY(-1px); }
+.btn:active{ transform: translateY(0); }
 
-  if (!confirm("Diesen Kontakt wirklich entfernen?")) return;
+/* Kleiner Hinweis unten im Main */
+.dev-credit {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  opacity: 0.7;
+  margin-top: 3rem;
+  padding-bottom: 1rem;
+}
 
-  const me = window.__SB_USER__?.id;
-  // Sicherheits-Delete: Nur löschen, wenn ich auch der requester bin
-  const { error } = await window.sb
-    .from("contacts")
-    .delete()
-    .eq("id", removeId);
+/* ===== Modale (Overview) im Bucket-Design ===== */
 
-  if (error) return alert("Entfernen fehlgeschlagen: " + error.message);
-  await renderManagedContacts();
-});
+.modal{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 1000;
 
-// Öffnen/Schließen binden
-manageBtn?.addEventListener("click", openManageModal);
-manageClose?.addEventListener("click", closeManageModal);
+  /* wie in Bucket: sichtbar nur im open-State */
+  pointer-events: none;
+  visibility: hidden;
+}
 
-// Klick auf Backdrop / Close
-manageModal?.addEventListener("click", (e) => {
-  if (e.target?.dataset?.close !== undefined) closeManageModal();
-});
+.modal.open{
+  pointer-events: auto;
+  visibility: visible;
+}
 
-// ESC schließt Modal
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && manageModal?.classList.contains("open")) {
-    closeManageModal();
+/* halbtransparenter, leicht verschwommener Hintergrund */
+.modal__backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 20, 0.60);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity .22s cubic-bezier(.22,1,.36,1);
+}
+
+.modal.open .modal__backdrop{
+  opacity: 1;
+}
+
+/* Karte: Glasoptik wie in Bucket (.modal-dialog) */
+.modal__card{
+  position: relative;
+  width: min(760px, 92vw);
+  max-height: 80vh;
+  padding: 18px 20px;
+
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background:
+    linear-gradient(
+      rgba(15, 23, 42, 0.92),
+      rgba(15, 23, 42, 0.90)
+    );
+  box-shadow: 0 24px 60px rgba(0,0,0,0.65);
+
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+
+  /* sanfte Einblend-Animation wie Bucket */
+  transform: translateY(8px) scale(.985);
+  opacity: 0;
+  transition:
+    transform .22s cubic-bezier(.22,1,.36,1),
+    opacity   .22s cubic-bezier(.22,1,.36,1),
+    filter    .22s;
+}
+
+.modal.open .modal__card{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.modal.closing .modal__card{
+  opacity: 0;
+  transform: translateY(-4px) scale(.985);
+  filter: blur(.5px);
+}
+
+/* Header wie Bucket-Modal (oben dünne Linie) */
+.modal__header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding-bottom: .75rem;
+  margin-bottom: .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.modal__header h2{
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: .2px;
+}
+
+/* Close-Button rechts oben – an Bucket angelehnt */
+.modal__close{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(15,23,42,0.9);
+  color: #fff;
+  border-radius: 999px;
+  padding: .20rem .6rem;
+  cursor: pointer;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .08s ease,
+    box-shadow .15s ease;
+}
+
+.modal__close:hover{
+  background: rgba(37, 56, 92, 0.95);
+  border-color: rgba(124,77,255,.6);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  transform: translateY(-1px);
+}
+
+.modal__close:active{
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(0,0,0,.4);
+}
+
+/* Liste im Modal: Karten-Look wie Bucket-Items */
+.modal__list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.modal__list li{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+
+  padding: .65rem .8rem;
+  border-radius: 14px;
+
+  background: radial-gradient(
+      circle at top left,
+      rgba(124,77,255,0.12),
+      transparent 56%
+    ),
+    rgba(15,23,42,0.95);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 10px 26px rgba(0,0,0,.55);
+
+  font-size: .9rem;
+}
+
+.modal__list li .meta{
+  color: var(--muted);
+  font-size: .78rem;
+  margin-top: .15rem;
+}
+
+/* Buttons innerhalb der Zeile (Annehmen/Ablehnen/Entfernen) */
+.modal__list .row-actions{
+  display: flex;
+  gap: .4rem;
+}
+
+.modal__list .row-actions button{
+  appearance: none;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(15,23,42,0.95);
+  color: #e6ecff;
+  padding: .3rem .75rem;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .08s ease,
+    box-shadow .15s ease;
+}
+
+.modal__list .row-actions button:hover{
+  background: rgba(124,77,255,0.18);
+  border-color: rgba(124,77,255,0.7);
+  box-shadow: 0 6px 18px rgba(124,77,255,0.5);
+  transform: translateY(-1px);
+}
+
+.modal__list .row-actions button:active{
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(0,0,0,.6);
+}
+
+/* Empty-State */
+.modal__list .empty{
+  justify-content: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Footer: Button-Leiste unten wie .modal-actions in Bucket */
+.modal__footer{
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  padding-top: .8rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+/* Footer-Button im Bucket-Stil (Schließen) */
+.modal__footer .btn-logout{
+  width: auto;
+  padding: .55rem 1.1rem;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+
+  background: linear-gradient(180deg, var(--acc-1), var(--acc-2));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(34,176,255,.45);
+  transition:
+    transform .08s ease,
+    box-shadow .15s ease,
+    opacity .15s ease;
+}
+
+.modal__footer .btn-logout:hover{
+  opacity: .95;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(34,176,255,.6);
+}
+
+.modal__footer .btn-logout:active{
+  transform: translateY(0);
+  box-shadow: 0 5px 14px rgba(0,0,0,.7);
+}
+
+
+/* ====== Glass Sidebar (wie Screenshot) ====== */
+/* Container: keine eigene Farbe, keine Rundung */
+.sidebar.glass-nav{
+  padding: 0;
+  background: transparent;
+  border-right: 0;
+}
+
+/* KANTIG + echter Glas-Blur ohne Farbverlauf */
+.nav-card{
+  
+  position: sticky;
+  top: 0;
+  height: 100vh;
+
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .9rem;
+  padding: .9rem;
+
+  border-radius: 0;
+  /* leicht dunkler Glas-Blur */
+  background: rgba(8, 10, 18, 0.25);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: none; /* kein Schatten */
+}
+
+
+
+/* Suche */
+.nav-search{
+  display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: .5rem;
+  padding: .5rem .6rem;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+}
+.nav-search .ico{ width: 18px; height: 18px; opacity: .9 }
+.nav-search input{
+  appearance: none; border: 0; outline: 0; background: transparent; color: var(--text);
+  font-size: .95rem;
+}
+.nav-search input::placeholder{ color: var(--muted) }
+
+/* Gruppen */
+.nav-groups{ display: flex; flex-direction: column; gap: .9rem; overflow: auto; }
+.nav-group{ display: flex; flex-direction: column; gap: .35rem; }
+.nav-label{
+  font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); opacity: .8; padding: .1rem .2rem .2rem .2rem;
+}
+
+/* Navigationseinträge: clean, erst bei Hover sichtbar */
+.nav-item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: .55rem;
+
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: .95rem;
+
+  padding: .45rem .55rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+
+  transition: background .18s ease, border-color .18s ease, transform .15s ease;
+  cursor: pointer;
+}
+
+/* Hover-Effekt: sanfter Glas-Glow */
+.nav-item:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+/* Aktiver Menüpunkt */
+.nav-item[aria-current="page"] {
+  background: rgba(122,162,255,0.18);
+  border-color: rgba(122,162,255,0.35);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+  font-weight: 600;
+}
+
+
+.nav-icon{ width: 22px; height: 22px; display: grid; place-items: center; opacity: .95 }
+.nav-icon svg{ width: 23px; height: 24px }
+.nav-text{ font-weight: 600; letter-spacing: .2px; font-size: .92rem }
+
+.nav-action {
+  all: unset;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: .55rem;
+  padding: .45rem .55rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .15s ease;
+}
+.nav-action:hover {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+
+/* ======= Sidebar Footer (Profilbereich – angepasst ans Gesamtbild) ======= */
+.nav-footer.dark-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+
+  /* gleicht das Padding der .nav-card aus */
+  margin-left: -1.2rem;
+  margin-right: -1.2rem;
+  margin-bottom: -1.2rem;
+  padding: 1rem 1.4rem;
+
+  width: calc(100% + 2.4rem); /* kompensiert den negativen Margin */
+  background: rgba(12, 16, 28, 0.45);
+  border-top: 1px solid rgba(255,255,255,.05);
+  border-radius: 0;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.05);
+  opacity: .95;
+}
+
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.profile-name {
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--text);
+}
+
+.profile-id {
+  font-size: .78rem;
+  color: var(--muted);
+  opacity: .9;
+}
+
+.logout-ico {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.18);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease;
+}
+.logout-ico:hover {
+  border-color: rgba(122,162,255,.55);
+  background: rgba(255,255,255,.08);
+}
+
+.nav-icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+.nav-item:hover .nav-icon img,
+.nav-action:hover .nav-icon img {
+  opacity: 1;
+}
+
+/* ---------- Intro Text unter dem Logo ---------- */
+.intro {
+  text-align: center;
+  max-width: 640px;
+  margin: 1rem auto 3rem;
+  color: var(--text);
+  opacity: 0.95;
+}
+
+.intro__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.3px;
+  color: #f2f5ff;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+
+.intro__text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.profile-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.profile-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.copy-id-icon {
+  width: 16px;
+  height: 16px;
+  color: #ffffff;       /* SVG wird weiß */
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.copy-id-icon:hover {
+  opacity: 1;
+}
+
+
+.overview-svg-icon {
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+  fill: #ffffff;
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+}
+
+.nav-item:hover .overview-svg-icon,
+.nav-item-active .overview-svg-icon {
+  opacity: 1;
+}
+
+/* ===== Kein Scroll – Inhalt skaliert sich automatisch ===== */
+.main-content-wrapper {
+  transform-origin: top center;
+}
+
+/* Höhe unter 900px → Inhalt leicht verkleinern */
+@media (max-height: 900px) {
+  .main-content-wrapper {
+    transform: scale(0.92);
   }
-});
+}
 
-
-initCopyToast({
-  triggerSelector: "#copyAccountIdIcon",
-  textSelector: ".profile-id",
-});
-
-/* ===== Mobile Sidebar Toggle (Hamburger / X) ===== */
-
-const mobileToggleBtn = document.querySelector(".mobile-nav-toggle");
-const sidebarCloseBtn = document.querySelector(".sidebar-close");
-
-// Sidebar öffnen
-mobileToggleBtn?.addEventListener("click", () => {
-  document.body.classList.add("sidebar-open");
-});
-
-// Sidebar schließen (X-Button)
-sidebarCloseBtn?.addEventListener("click", () => {
-  document.body.classList.remove("sidebar-open");
-});
-
-// Optional: ESC schließt die Sidebar auch
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && document.body.classList.contains("sidebar-open")) {
-    document.body.classList.remove("sidebar-open");
+/* Höhe unter 820px → stärker verkleinern */
+@media (max-height: 820px) {
+  .main-content-wrapper {
+    transform: scale(0.85);
   }
-});
+}
+
+/* Höhe unter 750px → noch stärker */
+@media (max-height: 750px) {
+  .main-content-wrapper {
+    transform: scale(0.78);
+  }
+}
+
+/* ===== Scrollbar komplett entfernen ===== */
+
+/* Chrome, Edge, Safari */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Firefox */
+html, body {
+  scrollbar-width: none !important;
+  overflow: hidden;        /* verhindert Scrolling */
+}
+
+/* Falls die Sidebar selbst noch Scroll erzeugt */
+.nav-groups::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar {
+  display: none !important;
+}
+.nav-groups,
+.sidebar {
+  scrollbar-width: none !important;
+}
