@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bucket Liste 8.1.0</title>
+  <link rel="stylesheet" href="../global/ui.css">
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../announcement/announcement.css" />
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/logo.png">
 </head>
 <body>
@@ -470,6 +472,20 @@
   </div>
 </div>
 
+
+<div id="copyToast" class="toast" aria-hidden="true">
+  <div class="toast__icon">
+    ✔
+  </div>
+  <div class="toast__content">
+    <div class="toast__title"></div>
+    <div class="toast__message"></div>
+  </div>
+  <button class="toast__close" id="copyToastClose">×</button>
+  <div class="toast__progress"></div>
+</div>
+
+
 <!-- Galaxy starfield canvas (nur im Modus 'galaxy' sichtbar) -->
 <canvas id="galaxyCanvas" aria-hidden="true"></canvas>
 
@@ -480,27 +496,43 @@
 <script type="module" src="../shared/supabase.js"></script>
 
 <!-- Auf Supabase warten, Session prüfen, DANN app.js laden -->
-<script>
-window.addEventListener("sb-ready", async () => {
-  const { data: { session } } = await window.sb.auth.getSession();
+<!-- Auf Supabase warten, Session prüfen, DANN app.js laden -->
+<script type="module">
+  import { initAnnouncementListener } from "../announcement/announcement-client.js";
 
-  if (!session?.user) {
-    // Nicht eingeloggt → zur Login-Seite (mit Rücksprung-Parameter)
-    const returnTo = encodeURIComponent("/Bucket/index.html");
-    location.href = `../login/login.html?returnTo=${returnTo}`;
-    return;
+  async function bootBucket() {
+    // Falls Supabase noch nicht fertig ist → warten
+    if (!window.__SB_READY__) {
+      await new Promise((resolve) => {
+        window.addEventListener("sb-ready", resolve, { once: true });
+      });
+    }
+
+    const { data: { session } } = await window.sb.auth.getSession();
+
+    if (!session?.user) {
+      const returnTo = encodeURIComponent("/Bucket/index.html");
+      location.href = `../login/login.html?returnTo=${returnTo}`;
+      return;
+    }
+
+    window.__SB_USER__ = session.user;
+
+    // Broadcast-Meldungen für Bucket aktivieren
+    initAnnouncementListener().catch(console.error);
+
+    // Jetzt erst die eigentliche App laden
+    const s = document.createElement("script");
+    s.type = "module";
+    s.src = "app.js";
+    document.body.appendChild(s);
   }
 
-  // Session global setzen (optional)
-  window.__SB_USER__ = session.user;
-
-  // Jetzt erst die App laden (als Modul)
-  const s = document.createElement("script");
-  s.type = "module";
-  s.src = "app.js";
-  document.body.appendChild(s);
-});
+  // Sofort starten (läuft in jedem Fall nur einmal)
+  bootBucket().catch(console.error);
 </script>
+
+
 
 
 </body>
