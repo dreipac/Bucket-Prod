@@ -4,13 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Übersicht</title>
+  <link rel="stylesheet" href="./global/ui.css" />
   <link rel="stylesheet" href="./overview.css" />
+  <link rel="stylesheet" href="./overview.mobile.css">
+  <link rel="stylesheet" href="./announcement/announcement.css" />
   <script type="module" src="./overview.js"></script>
 </head>
 <body class="layout">
   <!-- Linke Sidebar -->
 <aside class="sidebar glass-nav">
   <div class="nav-card">
+    <button class="sidebar-close" type="button">×</button>
     <!-- SUCHE -->
     <label class="nav-search" for="sidebarSearch">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
@@ -86,6 +90,14 @@
             </span>
             <span class="nav-text">Kontakte verwalten</span>
           </button>
+
+          <button id="adminPanelBtn" class="nav-item nav-action" type="button" hidden>
+            <span class="nav-icon">
+              <img src="./assets/icons/settings.png" alt="Admin Icon">
+            </span>
+            <span class="nav-text">Administration</span>
+          </button>
+
       </div>
     </nav>
 
@@ -117,10 +129,14 @@
   </div>
 </aside>
 
+<button class="mobile-nav-toggle" type="button">
+  <span></span>
+</button>
 
 
   <!-- Hauptbereich -->
   <main class="main">
+    <div class="main-content-wrapper">
     <div class="hero">
       <img class="hero__logo" src="./assets/icons/Straton-White.png" alt="Straton Logo" />
     </div>
@@ -152,6 +168,7 @@
     </section>
 
     <p class="dev-credit">Developed by Armin Durmisi</p>
+    </div>
   </main>
   <!-- Modal: Kontaktanfragen -->
 <div id="pendingModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
