@@ -1,5 +1,8 @@
 // overview.js – Auth-Gate + Logout
 import "./shared/supabase.js";
+import { initAnnouncementListener } from "./announcement/announcement-client.js";
+import { setupAdminAnnouncementUI } from "./announcement/admin-broadcast.js";
+import { initCopyToast } from "./global/ui.js";
 
 // Auf Supabase warten
 const waitForSB = () =>
@@ -14,7 +17,14 @@ await waitForSB();
 if (!window.__SB_USER__) {
   const returnTo = encodeURIComponent("/index.html");
   location.replace(`./login/login.html?returnTo=${returnTo}`);
+  throw new Error("Kein User – Redirect zu Login");
 }
+
+// Broadcast-System initialisieren
+initAnnouncementListener().catch(console.error);
+setupAdminAnnouncementUI().catch(console.error);
+
+// >>> ab hier bleibt dein bisheriger Overview-Code (Profil, Kontakte, ...) unverändert
 
 // ---- Profilkarte in der Sidebar hydratisieren ----
 const profileAvatarEl = document.querySelector(".profile-avatar");
@@ -394,65 +404,30 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-const copyIcon = document.getElementById("copyAccountIdIcon");
-const profileIdElCopy = document.querySelector(".profile-id");
 
-const toastEl = document.getElementById("copyToast");
-const toastCloseBtn = document.getElementById("copyToastClose");
-let toastTimeoutId = null;
-
-function hideCopyToast() {
-  if (!toastEl) return;
-  toastEl.classList.remove("is-visible");
-  toastEl.setAttribute("aria-hidden", "true");
-}
-
-function showCopyToast() {
-  if (!toastEl) return;
-
-  // vorherigen Timeout abbrechen
-  if (toastTimeoutId) {
-    clearTimeout(toastTimeoutId);
-    toastTimeoutId = null;
-  }
-
-  // Klasse kurz entfernen, um Animation zu resetten
-  toastEl.classList.remove("is-visible");
-  // Reflow erzwingen
-  void toastEl.offsetWidth;
-  toastEl.classList.add("is-visible");
-  toastEl.setAttribute("aria-hidden", "false");
-
-  // Auto-Hide nach 3 Sekunden
-  toastTimeoutId = setTimeout(hideCopyToast, 3000);
-}
-
-toastCloseBtn?.addEventListener("click", () => {
-  if (toastTimeoutId) {
-    clearTimeout(toastTimeoutId);
-    toastTimeoutId = null;
-  }
-  hideCopyToast();
+initCopyToast({
+  triggerSelector: "#copyAccountIdIcon",
+  textSelector: ".profile-id",
 });
 
-copyIcon?.addEventListener("click", async () => {
-  const text = profileIdElCopy?.textContent?.trim();
-  if (!text) return;
+/* ===== Mobile Sidebar Toggle (Hamburger / X) ===== */
 
-  try {
-    await navigator.clipboard.writeText(text);
+const mobileToggleBtn = document.querySelector(".mobile-nav-toggle");
+const sidebarCloseBtn = document.querySelector(".sidebar-close");
 
-    // kleines Feedback am Icon
-    copyIcon.style.opacity = "0.5";
-    setTimeout(() => (copyIcon.style.opacity = "1"), 250);
-
-    // Toast anzeigen
-    showCopyToast();
-  } catch {
-    // Fallback – nur wenn kopieren scheitert
-    alert("Konnte ID nicht kopieren");
-  }
+// Sidebar öffnen
+mobileToggleBtn?.addEventListener("click", () => {
+  document.body.classList.add("sidebar-open");
 });
 
+// Sidebar schließen (X-Button)
+sidebarCloseBtn?.addEventListener("click", () => {
+  document.body.classList.remove("sidebar-open");
+});
 
-
+// Optional: ESC schließt die Sidebar auch
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && document.body.classList.contains("sidebar-open")) {
+    document.body.classList.remove("sidebar-open");
+  }
+});
