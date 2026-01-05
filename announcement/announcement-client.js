@@ -65,6 +65,10 @@ let bodyEl = null;
 let currentAnnouncement = null;
 let isOpen = false;
 
+// NEU: Preview-Modus (soll kein "seen" in DB schreiben)
+let skipMarkSeen = false;
+
+
 function ensureUserModal() {
   if (overlayEl) return;
 
@@ -104,11 +108,16 @@ function ensureUserModal() {
     if (!isOpen) return;
     overlayEl.classList.remove("ann-overlay--open");
     isOpen = false;
-    if (currentAnnouncement?.id) {
+
+    const shouldMarkSeen = !skipMarkSeen;
+    skipMarkSeen = false;
+
+    if (shouldMarkSeen && currentAnnouncement?.id) {
       markSeenDB(currentAnnouncement.id);
     }
     currentAnnouncement = null;
   }
+
 
   btn.addEventListener("click", close);
   overlayEl.addEventListener("click", (ev) => {
@@ -136,11 +145,15 @@ function showAnnouncement(ann) {
 }
 
 async function loadInitialAnnouncements() {
-  const { data, error } = await sb
-    .from("announcements")
-    .select("id, title, body, created_at")
-    .order("created_at", { ascending: false })
-    .limit(20);
+const user = window.__SB_USER__;
+const { data, error } = await sb
+  .from("announcements")
+  .select("id, title, body, created_at, target_user_id")
+  // nur globale oder für diesen User:
+  .or(`target_user_id.is.null,target_user_id.eq.${user.id}`)
+  .order("created_at", { ascending: false })
+  .limit(20);
+
 
   if (error) {
     console.error("[Announcements] Laden fehlgeschlagen:", error);
@@ -181,6 +194,12 @@ function setupRealtime() {
           const ann = payload.new;
           if (!ann?.id) return;
 
+          // nur globale (null) oder an mich
+          const me = window.__SB_USER__?.id;
+          if (!me) return;
+          if (ann.target_user_id && ann.target_user_id !== me) return;
+
+
           const seenSet = await fetchSeenSetForUser([ann.id]);
           if (seenSet.has(ann.id)) return;
 
@@ -203,3 +222,15 @@ export async function initAnnouncementListener() {
   await loadInitialAnnouncements();
   setupRealtime();
 }
+
+// NEU: Admin-Vorschau (zeigt Modal wie User, ohne DB "seen" zu markieren)
+export function previewAnnouncement({ title, body }) {
+  ensureUserModal();
+  skipMarkSeen = true;
+  showAnnouncement({
+    id: null, // wichtig: null => nichts in "announcement_seen"
+    title: title ?? "",
+    body: body ?? ""
+  });
+}
+
