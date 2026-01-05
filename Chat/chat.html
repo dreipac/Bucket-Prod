@@ -1,9 +1,12 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nachrichtenchats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../global/ui.css">
   <link rel="stylesheet" href="./chat.css" />
   <link rel="stylesheet" href="../announcement/announcement.css" />
@@ -170,6 +173,85 @@
     </div>
   </div>
 </div>
+
+  <!-- NEU: Recovery-Key-Erstellung (Backup) -->
+<div id="recoveryModal" class="chat-modal" aria-hidden="true">
+  <div class="chat-modal-backdrop"></div>
+
+  <div class="chat-modal-dialog recovery-style" role="dialog" aria-modal="true">
+    <div class="recovery-header">
+      <img src="../assets/icons/recovery.png" class="recovery-icon" alt="">
+      <h2>Wiederherstellungsschlüssel</h2>
+    </div>
+
+    <p class="recovery-description">
+      Dies ist dein persönlicher Wiederherstellungsschlüssel für das Backup deiner Nachrichten:
+    </p>
+
+    <div class="recovery-key-box">
+      <pre id="recoveryKeyDisplay"></pre>
+      <button
+        type="button"
+        id="recoveryCopyBtn"
+        class="recovery-copy-btn">
+        Kopieren
+      </button>
+    </div>
+
+    <a href="#" class="recovery-info-link">
+      Weitere Informationen zur Ende-zu-Ende-Verschlüsselung
+    </a>
+
+    <label class="recovery-checkbox">
+      <input type="checkbox" id="recoveryConfirm">
+      Ich habe den Schlüssel sicher gespeichert
+    </label>
+
+    <button type="button" id="recoveryDoneBtn" disabled>
+      Fertig
+    </button>
+  </div>
+</div>
+
+
+  <!-- NEU: Recovery-Key-Eingabe (Wiederherstellung) -->
+  <div id="recoveryInputModal" class="chat-modal" aria-hidden="true">
+    <div class="chat-modal-backdrop"></div>
+    <div class="chat-modal-dialog" role="dialog" aria-modal="true">
+      <div class="chat-modal-head">
+        <h2>Wiederherstellungsschlüssel eingeben</h2>
+      </div>
+      <div class="chat-modal-body">
+        <p>
+          Um deine bestehenden verschlüsselten Nachrichten auf diesem Browser zu lesen,
+          gib bitte deinen gespeicherten Wiederherstellungsschlüssel ein.
+        </p>
+
+        <input
+          id="recoveryInputField"
+          class="recovery-input"
+          type="text"
+          placeholder="z.B. 4f9c…"
+          autocomplete="off"
+        />
+
+        <div id="recoveryInputError" class="recovery-error" hidden>
+          Der eingegebene Schlüssel war ungültig. Du kannst es erneut versuchen oder
+          ohne Wiederherstellung fortfahren (alte Nachrichten bleiben dann verschlüsselt).
+        </div>
+
+        <div class="recovery-actions">
+          <button type="button" id="recoveryInputCancelBtn">
+            Ohne Wiederherstellung fortfahren
+          </button>
+          <button type="button" id="recoveryInputSubmitBtn">
+            Wiederherstellen
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <script type="module">
   // Warten bis Supabase bereit ist
