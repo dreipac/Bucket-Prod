@@ -163,3 +163,229 @@
     bottom: 1rem;
   }
 }
+
+/* ===========================
+   NEU: Admin Vorschau Liste
+=========================== */
+
+.ann-preview__hint{
+  margin: 0 0 0.9rem;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.ann-preview__list-wrap{
+  max-height: 340px;
+  overflow: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  padding: 10px;
+  margin-bottom: 0.9rem;
+}
+
+.ann-preview__list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ann-preview__item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(15,23,42,0.75);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.ann-preview__title{
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.ann-preview__sub{
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.ann-preview__empty{
+  color: #9ca3af;
+  font-style: italic;
+  padding: 6px 2px;
+}
+
+/* ===========================
+   NEU: Tabs im Vorschau-Modal
+=========================== */
+
+.ann-tabs{
+  display:flex;
+  gap:.5rem;
+  margin: 0 0 .85rem;
+}
+
+.ann-tab{
+  border-radius:999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: #e5e7eb;
+  padding: .4rem .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.ann-tab:hover{
+  transform: translateY(-1px);
+  border-color: rgba(34,176,255,.55);
+}
+
+.ann-tab.is-active{
+  background: rgba(34,176,255,.16);
+  border-color: rgba(34,176,255,.65);
+  box-shadow: 0 0 0 2px rgba(34,176,255,.18) inset;
+}
+
+.ann-tabpanel{
+  display:none;
+}
+.ann-tabpanel.is-active{
+  display:block;
+}
+
+/* ===========================
+   Recovery Preview: Chat-Modal Look (scoped)
+   wirkt NUR auf der Overview-Vorschau
+=========================== */
+
+.ann-recovery-preview{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.ann-recovery-preview.open{
+  display: flex;
+}
+
+.ann-recovery-preview .chat-modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(18px);
+}
+
+.ann-recovery-preview .chat-modal-dialog{
+  position: relative;
+  z-index: 1;
+  width: min(900px, 96vw);
+  max-height: 90vh;
+  border-radius: 20px;
+
+  /* wie chat.css */
+  background: rgba(22,24,28,.75);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+
+  padding: 18px 18px 14px;
+  overflow: hidden;
+}
+
+.ann-recovery-preview .chat-modal-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.ann-recovery-preview .chat-modal-head h2{
+  margin: 0;
+  font-size: 1rem;
+  color: #e9eef6;
+}
+
+.ann-recovery-preview .chat-modal-body{
+  max-height: 70vh;
+  overflow: auto;
+  color: #e5e7eb;
+}
+
+.ann-recovery-preview .chat-modal-body p{
+  margin: 0 0 12px;
+  font-size: .95rem;
+  line-height: 1.5;
+}
+
+.ann-recovery-preview .recovery-key{
+  margin: .75rem 0 1rem;
+  padding: .7rem .9rem;
+  border-radius: 12px;
+  background: rgba(0,0,0,.25);
+  border: 1px dashed rgba(255,255,255,.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .9rem;
+  word-break: break-all;
+  color: #f9fafb;
+}
+
+.ann-recovery-preview .recovery-checkbox{
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: .5rem 0 1rem;
+  font-size: .9rem;
+  color: #e5e7eb;
+}
+
+.ann-recovery-preview #recoveryDoneBtnPreview{
+  padding: .55rem .9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  color: #e9eef6;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: .9rem;
+}
+
+.ann-recovery-preview #recoveryDoneBtnPreview[disabled]{
+  opacity: .6;
+  cursor: default;
+}
+
+/* Admin Vorschau (Auswahl-Overlay) soll unter den App-Modals liegen */
+.ann-overlay--preview {
+  z-index: 9998;
+}
+
+.chat-preview-scope{
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: none;          /* <<< WICHTIG */
+  pointer-events: none;
+}
+
+
+.chat-preview-scope .chat-modal{
+  pointer-events: auto;
+}
+
+
+/* Nur wenn aktiv geöffnet */
+.chat-preview-scope.is-open{
+  display: block;
+}
