@@ -21,12 +21,12 @@ function projectBase() {
 
 // Login-URL absolut (bezogen auf Projektbasis) + next=...
 function buildLoginHref() {
-  // wenn du irgendwo in Bucket-Prod bist, soll er zur React Login App
-  const here = location.href; // komplette URL
+  const here = location.href;
   const url = new URL("https://dreipac.github.io/straton-login/");
-  url.searchParams.set("returnTo", here);
+  url.searchParams.set("next", here);
   return url.toString();
 }
+
 
 
 function resolvePostLoginTarget() {
