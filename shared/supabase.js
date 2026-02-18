@@ -39,6 +39,7 @@ sb.auth.onAuthStateChange((event, session) => {
     if (href) location.href = href;  // nur redirecten, wenn wir *nicht* schon auf login.html sind
     return;
   }
+}
 
 
 
