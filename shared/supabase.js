@@ -10,7 +10,7 @@ window.sb = sb;
 
 // Bin ich gerade auf der Login-Seite?
 function onLoginPage() {
-  return /\/login\/(login\.html)?$/i.test(location.pathname);
+  return false;
 }
 
 // Projektbasis ermitteln (Ordner, in dem index.html liegt)
@@ -21,14 +21,13 @@ function projectBase() {
 
 // Login-URL absolut (bezogen auf Projektbasis) + next=...
 function buildLoginHref() {
-  if (onLoginPage()) return null; // kein Redirect von login.html
-
-  const here = location.pathname + location.search + location.hash;
-  const absLoginPath = projectBase() + "login/login.html";
-  const url = new URL(absLoginPath, location.origin);
-  url.searchParams.set("next", here);
+  // wenn du irgendwo in Bucket-Prod bist, soll er zur React Login App
+  const here = location.href; // komplette URL
+  const url = new URL("https://dreipac.github.io/straton-login/");
+  url.searchParams.set("returnTo", here);
   return url.toString();
 }
+
 
 function resolvePostLoginTarget() {
   const url = new URL(location.href);
@@ -65,6 +64,7 @@ sb.auth.onAuthStateChange((event, session) => {
 if (session?.user && onLoginPage()) {
   location.href = resolvePostLoginTarget();
 }
+
 
 
 
