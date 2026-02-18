@@ -103,10 +103,11 @@ async function initPresenceOverview() {
 
 // Nicht eingeloggt? → zur Login-Seite
 if (!window.__SB_USER__) {
-  const returnTo = encodeURIComponent("/index.html");
-  location.replace(`./login/login.html?returnTo=${returnTo}`);
+  const next = encodeURIComponent(location.href); // volle URL zurück
+  location.replace(`https://dreipac.github.io/straton-login/?next=${next}`);
   throw new Error("Kein User – Redirect zu Login");
 }
+
 // ===== Toast UI (Overview) =====
 function ensureToastHost() {
   let host = document.querySelector(".toast-host");
@@ -834,17 +835,16 @@ hydrateGreeting().catch(console.error);
 
 
 // Logout-Button
-const logoutBtn = document.getElementById("logoutBtn");
 logoutBtn?.addEventListener("click", async () => {
   try {
     await window.sb.auth.signOut();
-
-    const target = encodeURIComponent("https://dreipac.github.io/Bucket-Prod/");
-    location.href = `https://dreipac.github.io/straton-login/?returnTo=${target}`;
+    const next = encodeURIComponent("https://dreipac.github.io/Bucket-Prod/");
+    location.href = `https://dreipac.github.io/straton-login/?next=${next}`;
   } catch (e) {
     alert("Abmelden nicht möglich. Bitte erneut versuchen.");
   }
 });
+
 
 
 async function handleAddContactClick() {
