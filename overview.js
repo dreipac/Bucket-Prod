@@ -838,13 +838,14 @@ const logoutBtn = document.getElementById("logoutBtn");
 logoutBtn?.addEventListener("click", async () => {
   try {
     await window.sb.auth.signOut();
-    const returnTo = encodeURIComponent("/index.html");
-    location.replace(`./login/login.html?returnTo=${returnTo}`);
+
+    const target = encodeURIComponent("https://dreipac.github.io/Bucket-Prod/");
+    location.href = `https://dreipac.github.io/straton-login/?returnTo=${target}`;
   } catch (e) {
-    // Optional: Fehlermeldung oder Toast
     alert("Abmelden nicht möglich. Bitte erneut versuchen.");
   }
 });
+
 
 async function handleAddContactClick() {
   const inputId = prompt("Bitte gib die Konto-ID oder User-UUID ein:");
