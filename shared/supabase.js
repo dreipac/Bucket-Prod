@@ -8,17 +8,6 @@ window.sb = sb;
 
 /* ---------- Helpers ---------- */
 
-// Bin ich gerade auf der Login-Seite?
-function onLoginPage() {
-  return /\/login\/(login\.html)?$/i.test(location.pathname);
-}
-
-// Projektbasis ermitteln (Ordner, in dem index.html liegt)
-function projectBase() {
-  // entfernt /Chat/... /Bucket/... /login/... oder den Dateinamen am Ende
-  return location.pathname.replace(/\/(chat|bucket|login)\/.*|\/[^/]*$/i, "/");
-}
-
 // Login-URL absolut (bezogen auf Projektbasis) + next=...
 function buildLoginHref() {
   if (onLoginPage()) return null; // ganz wichtig: kein Redirect von login.html
@@ -29,14 +18,6 @@ function buildLoginHref() {
   url.searchParams.set("next", here);                   // nur einmal anhängen
   return url.toString();
 }
-
-function resolvePostLoginTarget() {
-  const url = new URL(location.href);
-  const next = url.searchParams.get("next") || url.searchParams.get("returnTo");
-  // Fallback zur Projekt-Übersicht
-  return next || projectBase() + "index.html";
-}
-
 
 
 /* ---------- Session initialisieren ---------- */
@@ -59,13 +40,6 @@ sb.auth.onAuthStateChange((event, session) => {
     return;
   }
 
-  if (event === "SIGNED_IN" && onLoginPage()) {
-    location.href = resolvePostLoginTarget();
-  }
-});
 
 
-// Falls die Seite direkt mit bestehender Session auf login.html geladen wird → sofort weiter
-if (session?.user && onLoginPage()) {
-  location.href = resolvePostLoginTarget();
-}
+
